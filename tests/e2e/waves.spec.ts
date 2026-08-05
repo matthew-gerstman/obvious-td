@@ -28,14 +28,14 @@ test('enemies appear on canvas after starting a wave', async ({ page }) => {
   });
 
   const result = await page.evaluate(
-    async (args: { tileSize: number }): Promise<{
+    async (args: { tileSize: number; enemyIds: string[] }): Promise<{
       spawnX: number;
       spawnY: number;
       pixelColor: { r: number; g: number; b: number; a: number };
       aliveCount: number;
       spawnedCount: number;
     }> => {
-      const { tileSize } = args;
+      const { tileSize, enemyIds } = args;
 
       const { loadMap } = await import('/src/maps/map-loader.ts');
       const { WaveRunner } = await import('/src/waves/wave-runner.ts');
@@ -57,7 +57,7 @@ test('enemies appear on canvas after starting a wave', async ({ page }) => {
 
       // Load enemy data
       const enemyData: Record<string, unknown> = {};
-      for (const id of ENEMY_IDS) {
+      for (const id of enemyIds) {
         const response = await fetch(`/data/archetypes/${id}.json`);
         enemyData[id] = await response.json();
       }
@@ -114,7 +114,7 @@ test('enemies appear on canvas after starting a wave', async ({ page }) => {
         spawnedCount,
       };
     },
-    { tileSize: TILE_SIZE },
+    { tileSize: TILE_SIZE, enemyIds: ENEMY_IDS },
   );
 
   // First enemy should be at the path start (0, 7) for map_single_path
@@ -145,7 +145,7 @@ test('boss telegraph state is set before boss waves', async ({ page }) => {
   });
 
   const result = await page.evaluate(
-    async (): Promise<{
+    async (enemyIds: string[]): Promise<{
       shouldTelegraphBeforeBoss: boolean;
       shouldTelegraphBeforeNormal: boolean;
       messageContainsWave: boolean;
@@ -187,7 +187,7 @@ test('boss telegraph state is set before boss waves', async ({ page }) => {
       const difficulty = diffData.modes.medium;
 
       const enemyData: Record<string, unknown> = {};
-      for (const id of ENEMY_IDS) {
+      for (const id of enemyIds) {
         const response = await fetch(`/data/archetypes/${id}.json`);
         enemyData[id] = await response.json();
       }
@@ -211,6 +211,7 @@ test('boss telegraph state is set before boss waves', async ({ page }) => {
         waveRunnerNormalFlag,
       };
     },
+    ENEMY_IDS,
   );
 
   expect(result.shouldTelegraphBeforeBoss).toBe(true);
