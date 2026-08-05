@@ -66,9 +66,9 @@ test('enemies appear on canvas after starting a wave', async ({ page }) => {
       const runner = new WaveRunner();
       runner.startWave(1, waveTable, enemyData, difficulty, map);
 
-      // Step once to spawn the first enemy (spawnTime=0)
-      const dt = 1 / 60;
-      runner.update(dt, map);
+      // Step once with dt=0 to spawn the first enemy (spawnTime=0)
+      // without advancing its position, so it stays at the path start
+      runner.update(0, map);
 
       const aliveEnemies = runner.getAliveEnemies();
       const spawnedCount = runner.getSpawnedCount();
