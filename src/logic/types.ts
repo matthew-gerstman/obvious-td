@@ -43,11 +43,19 @@ export interface TowerTier {
   incomeInterval?: number;
 }
 
+export interface TowerPresentation {
+  name: string;
+  description: string;
+  sprite: string;
+  projectileSprite?: string;
+}
+
 export interface TowerData {
   id: string;
   type: 'tower';
   archetype: string;
   logic: { tiers: TowerTier[] };
+  presentation?: TowerPresentation;
 }
 
 export interface DifficultyMode {
