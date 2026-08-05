@@ -1,4 +1,4 @@
-import type { EnemyData, DifficultyMode, SlowEffect } from '../logic/types';
+import type { EnemyData, DifficultyMode, SlowEffect, DoTEffect, RuntimeEnemy } from '../logic/types';
 import { scaleHP, getBossHPMultiplier } from '../logic/wave-scaling';
 import { applyDifficultyHP } from '../logic/difficulty';
 import { applyArmor, getEffectiveSpeed } from '../logic/damage';
@@ -14,7 +14,7 @@ let enemyIdCounter = 0;
  * and slow-effect management. Position is derived from pathProgress via
  * the Path's getPositionAtDistance method.
  */
-export class Enemy {
+export class Enemy implements RuntimeEnemy {
   readonly id: string;
   readonly archetype: string;
   hp: number;
@@ -31,6 +31,8 @@ export class Enemy {
   y: number;
   status: EnemyStatus;
   activeSlowEffects: SlowEffect[];
+  activeDoTEffects: DoTEffect[];
+  rewardClaimed: boolean;
 
   constructor(
     enemyData: EnemyData,
@@ -62,6 +64,8 @@ export class Enemy {
     this.y = 0;
     this.status = 'alive';
     this.activeSlowEffects = [];
+    this.activeDoTEffects = [];
+    this.rewardClaimed = false;
   }
 
   /**

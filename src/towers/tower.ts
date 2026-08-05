@@ -15,6 +15,9 @@ export class Tower {
   totalInvested: number;
   cooldownTimer: number;
   stats: TowerTier;
+  effectiveDamage: number;
+  effectiveRange: number;
+  effectiveCooldown: number;
 
   constructor(id: string, archetype: TowerData, tileX: number, tileY: number) {
     this.id = id;
@@ -27,6 +30,17 @@ export class Tower {
     this.totalInvested = tier1Stats.cost;
     this.cooldownTimer = 0;
     this.stats = tier1Stats;
+    this.effectiveDamage = tier1Stats.damage;
+    this.effectiveRange = tier1Stats.range;
+    this.effectiveCooldown = tier1Stats.cooldown;
+  }
+
+  /** Resets effective stats to base values. Called by the aura manager before reapplying buffs. */
+  resetEffectiveStats(): void {
+    const stats = this.getStats();
+    this.effectiveDamage = stats.damage;
+    this.effectiveRange = stats.range;
+    this.effectiveCooldown = stats.cooldown;
   }
 
   /** Returns the current tier's stats from the archetype data. */
@@ -67,6 +81,7 @@ export class Tower {
     this.tier++;
     this.totalInvested += cost;
     this.stats = this.getStats();
+    this.resetEffectiveStats();
   }
 
   /** Returns the sell value: floor(0.7 * totalInvested). */

@@ -120,6 +120,13 @@ export interface SlowEffect {
   duration: number;
 }
 
+export interface DoTEffect {
+  dotDamage: number;
+  remainingTicks: number;
+  tickInterval: number;
+  tickTimer: number;
+}
+
 export type TargetingMode = 'first' | 'last' | 'strong' | 'close';
 
 // A tower placed on the map (used by balance gate).
