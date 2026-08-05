@@ -1,0 +1,9 @@
+{
+  "id": "gatling",
+  "name": "Gatling Tower",
+  "cost": 50,
+  "damage": 5,
+  "range": 120,
+  "fireRate": 4
+}
+
