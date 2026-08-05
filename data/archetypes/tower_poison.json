@@ -1,0 +1,54 @@
+{
+  "id": "tower_poison",
+  "type": "tower",
+  "archetype": "poison",
+  "logic": {
+    "tiers": [
+      {
+        "tier": 1,
+        "cost": 100,
+        "damage": 5,
+        "cooldown": 0.5,
+        "range": 2.5,
+        "targeting": "strong",
+        "hitsAir": false,
+        "armorPiercing": true,
+        "dotDamage": 4,
+        "dotDuration": 3,
+        "dotTicks": 6
+      },
+      {
+        "tier": 2,
+        "cost": 170,
+        "damage": 8,
+        "cooldown": 0.5,
+        "range": 2.5,
+        "targeting": "strong",
+        "hitsAir": false,
+        "armorPiercing": true,
+        "dotDamage": 7,
+        "dotDuration": 3,
+        "dotTicks": 6
+      },
+      {
+        "tier": 3,
+        "cost": 270,
+        "damage": 12,
+        "cooldown": 0.5,
+        "range": 3.0,
+        "targeting": "strong",
+        "hitsAir": false,
+        "armorPiercing": true,
+        "dotDamage": 12,
+        "dotDuration": 4,
+        "dotTicks": 8
+      }
+    ]
+  },
+  "presentation": {
+    "name": "Poison Tower",
+    "description": "Damage-over-time tower. Initial hit deals modest damage, but the poison ticks ignore armor and accumulate against high-HP targets.",
+    "sprite": "sprites/default/poison.png",
+    "projectileSprite": "sprites/default/poison_projectile.png"
+  }
+}

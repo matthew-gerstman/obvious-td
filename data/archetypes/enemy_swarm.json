@@ -1,0 +1,18 @@
+{
+  "id": "enemy_swarm",
+  "type": "enemy",
+  "archetype": "swarm",
+  "logic": {
+    "baseHP": 15,
+    "speed": 1.2,
+    "flying": false,
+    "spawnCount": 8,
+    "goldReward": 3,
+    "isBoss": false
+  },
+  "presentation": {
+    "name": "Swarm",
+    "description": "Weak enemy that spawns in large groups. Individual units are fragile, but their numbers can overwhelm single-target towers.",
+    "sprite": "sprites/default/swarm.png"
+  }
+}

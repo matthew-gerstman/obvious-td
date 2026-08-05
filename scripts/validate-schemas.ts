@@ -1,61 +1,76 @@
 import { readFileSync, readdirSync } from 'node:fs';
-import { join, basename } from 'node:path';
+import { join } from 'node:path';
 import Ajv from 'ajv';
 
 const SCHEMAS_DIR = 'schemas';
-const DATA_DIR = 'data/samples';
+const DATA_ARCHETYPES_DIR = 'data/archetypes';
+const DATA_MAPS_DIR = 'data/maps';
+const DATA_THEMES_DIR = 'data/themes';
+const DATA_WAVES_DIR = 'data/waves';
 
 /**
- * Validates JSON fixture files against their corresponding schemas.
- * Convention: a file named `<name>.schema.json` in schemas/ validates
- * `valid-<name>.json` (must pass) and `invalid-<name>.json` (must fail)
- * in data/samples/.
- *
+ * Validates all game data files against their corresponding JSON schemas.
+ * Covers towers, enemies, maps, themes, wave tables, and difficulty config.
  * Exits non-zero if any validation check fails.
  */
 function main(): void {
   const ajv = new Ajv({ allErrors: true, strict: true });
-  const schemaFiles = readdirSync(SCHEMAS_DIR).filter((f) => f.endsWith('.schema.json'));
-
   let failures = 0;
 
-  for (const schemaFile of schemaFiles) {
-    const baseName = schemaFile.replace('.schema.json', '');
-    const schemaPath = join(SCHEMAS_DIR, schemaFile);
-    const schema = JSON.parse(readFileSync(schemaPath, 'utf-8')) as object;
-    const validate = ajv.compile(schema);
+  const compile = (name: string) =>
+    ajv.compile(JSON.parse(readFileSync(join(SCHEMAS_DIR, `${name}.schema.json`), 'utf-8')) as object);
 
-    const validFixture = join(DATA_DIR, `valid-${baseName}.json`);
-    const invalidFixture = join(DATA_DIR, `invalid-${baseName}.json`);
+  const towerValidate = compile('tower');
+  const enemyValidate = compile('enemy');
+  const mapValidate = compile('map');
+  const themeValidate = compile('theme');
+  const waveTableValidate = compile('wave_table');
+  const difficultyValidate = compile('difficulty');
 
-    // Valid fixture must pass
+  const check = (filePath: string, validate: ReturnType<typeof compile>, label: string): void => {
     try {
-      const data = JSON.parse(readFileSync(validFixture, 'utf-8'));
+      const data = JSON.parse(readFileSync(filePath, 'utf-8'));
       if (!validate(data)) {
-        console.error(`FAIL: ${basename(validFixture)} should be valid but failed: ${ajv.errorsText(validate.errors)}`);
+        console.error(`FAIL: ${label} — ${ajv.errorsText(validate.errors)}`);
         failures++;
       } else {
-        console.log(`PASS: ${basename(validFixture)} is valid`);
+        console.log(`PASS: ${label}`);
       }
     } catch (err) {
-      console.error(`ERROR: could not read ${validFixture}: ${err}`);
+      console.error(`ERROR: ${filePath}: ${err}`);
       failures++;
     }
+  };
 
-    // Invalid fixture must fail
-    try {
-      const data = JSON.parse(readFileSync(invalidFixture, 'utf-8'));
-      if (validate(data)) {
-        console.error(`FAIL: ${basename(invalidFixture)} should be invalid but passed validation`);
-        failures++;
-      } else {
-        console.log(`PASS: ${basename(invalidFixture)} correctly rejected`);
-      }
-    } catch (err) {
-      console.error(`ERROR: could not read ${invalidFixture}: ${err}`);
-      failures++;
-    }
+  // Tower files
+  const towerFiles = readdirSync(DATA_ARCHETYPES_DIR)
+    .filter(file => file.startsWith('tower_') && file.endsWith('.json'));
+  for (const file of towerFiles) {
+    check(join(DATA_ARCHETYPES_DIR, file), towerValidate, `tower: ${file}`);
   }
+
+  // Enemy files
+  const enemyFiles = readdirSync(DATA_ARCHETYPES_DIR)
+    .filter(file => file.startsWith('enemy_') && file.endsWith('.json'));
+  for (const file of enemyFiles) {
+    check(join(DATA_ARCHETYPES_DIR, file), enemyValidate, `enemy: ${file}`);
+  }
+
+  // Map files
+  const mapFiles = readdirSync(DATA_MAPS_DIR)
+    .filter(file => file.startsWith('map_') && file.endsWith('.json'));
+  for (const file of mapFiles) {
+    check(join(DATA_MAPS_DIR, file), mapValidate, `map: ${file}`);
+  }
+
+  // Theme
+  check(join(DATA_THEMES_DIR, 'demons-heaven.json'), themeValidate, 'theme: demons-heaven.json');
+
+  // Wave table
+  check(join(DATA_WAVES_DIR, 'wave_table.json'), waveTableValidate, 'wave table: wave_table.json');
+
+  // Difficulty
+  check('data/difficulty.json', difficultyValidate, 'difficulty: difficulty.json');
 
   if (failures > 0) {
     console.error(`\n${failures} validation failure(s)`);
@@ -66,4 +81,3 @@ function main(): void {
 }
 
 main();
-

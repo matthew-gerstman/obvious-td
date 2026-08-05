@@ -1,0 +1,51 @@
+{
+  "id": "tower_frost",
+  "type": "tower",
+  "archetype": "frost",
+  "logic": {
+    "tiers": [
+      {
+        "tier": 1,
+        "cost": 80,
+        "damage": 2,
+        "cooldown": 0.8,
+        "range": 2.5,
+        "targeting": "close",
+        "hitsAir": false,
+        "armorPiercing": false,
+        "slowFactor": 0.5,
+        "slowDuration": 1.5
+      },
+      {
+        "tier": 2,
+        "cost": 135,
+        "damage": 4,
+        "cooldown": 0.7,
+        "range": 2.5,
+        "targeting": "close",
+        "hitsAir": false,
+        "armorPiercing": false,
+        "slowFactor": 0.4,
+        "slowDuration": 2.0
+      },
+      {
+        "tier": 3,
+        "cost": 210,
+        "damage": 6,
+        "cooldown": 0.6,
+        "range": 3.0,
+        "targeting": "close",
+        "hitsAir": false,
+        "armorPiercing": false,
+        "slowFactor": 0.3,
+        "slowDuration": 2.5
+      }
+    ]
+  },
+  "presentation": {
+    "name": "Frost Tower",
+    "description": "Control tower that slows enemies on hit. Low damage but the slow effect makes it invaluable for managing fast enemies.",
+    "sprite": "sprites/default/frost.png",
+    "projectileSprite": "sprites/default/frost_projectile.png"
+  }
+}

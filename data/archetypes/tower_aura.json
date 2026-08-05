@@ -1,0 +1,62 @@
+{
+  "id": "tower_aura",
+  "type": "tower",
+  "archetype": "aura",
+  "logic": {
+    "tiers": [
+      {
+        "tier": 1,
+        "cost": 90,
+        "damage": 0,
+        "cooldown": 0,
+        "range": 0,
+        "targeting": "none",
+        "hitsAir": false,
+        "armorPiercing": false,
+        "auraRadius": 2.0,
+        "auraBuffs": {
+          "damageMultiplier": 1.25,
+          "rangeMultiplier": 1.1,
+          "fireRateMultiplier": 1.15
+        }
+      },
+      {
+        "tier": 2,
+        "cost": 155,
+        "damage": 0,
+        "cooldown": 0,
+        "range": 0,
+        "targeting": "none",
+        "hitsAir": false,
+        "armorPiercing": false,
+        "auraRadius": 2.5,
+        "auraBuffs": {
+          "damageMultiplier": 1.4,
+          "rangeMultiplier": 1.15,
+          "fireRateMultiplier": 1.25
+        }
+      },
+      {
+        "tier": 3,
+        "cost": 240,
+        "damage": 0,
+        "cooldown": 0,
+        "range": 0,
+        "targeting": "none",
+        "hitsAir": false,
+        "armorPiercing": false,
+        "auraRadius": 3.0,
+        "auraBuffs": {
+          "damageMultiplier": 1.6,
+          "rangeMultiplier": 1.2,
+          "fireRateMultiplier": 1.35
+        }
+      }
+    ]
+  },
+  "presentation": {
+    "name": "Aura Tower",
+    "description": "Support tower that buffs nearby towers' damage, range, and fire rate. Does not attack directly. Stack multiple for compound bonuses.",
+    "sprite": "sprites/default/aura.png"
+  }
+}

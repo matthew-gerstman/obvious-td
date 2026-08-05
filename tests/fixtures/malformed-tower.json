@@ -1,0 +1,15 @@
+{
+  "id": "tower_broken",
+  "type": "tower",
+  "archetype": "gatling",
+  "logic": {
+    "tiers": [
+      { "tier": 1, "cost": 50, "damage": 5, "cooldown": 0.3, "range": 2.5 }
+    ]
+  },
+  "presentation": {
+    "name": "Broken Tower",
+    "description": "Missing required fields and wrong tier count.",
+    "sprite": "sprites/default/broken.png"
+  }
+}

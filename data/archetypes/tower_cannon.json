@@ -1,0 +1,48 @@
+{
+  "id": "tower_cannon",
+  "type": "tower",
+  "archetype": "cannon",
+  "logic": {
+    "tiers": [
+      {
+        "tier": 1,
+        "cost": 120,
+        "damage": 40,
+        "cooldown": 1.2,
+        "range": 3.0,
+        "targeting": "strong",
+        "hitsAir": true,
+        "armorPiercing": false,
+        "splashRadius": 1.5
+      },
+      {
+        "tier": 2,
+        "cost": 200,
+        "damage": 65,
+        "cooldown": 1.0,
+        "range": 3.0,
+        "targeting": "strong",
+        "hitsAir": true,
+        "armorPiercing": false,
+        "splashRadius": 1.8
+      },
+      {
+        "tier": 3,
+        "cost": 320,
+        "damage": 100,
+        "cooldown": 0.9,
+        "range": 3.5,
+        "targeting": "strong",
+        "hitsAir": true,
+        "armorPiercing": false,
+        "splashRadius": 2.0
+      }
+    ]
+  },
+  "presentation": {
+    "name": "Cannon Tower",
+    "description": "Heavy splash-damage tower. Excels at choke points where enemies cluster. Hits both ground and air targets.",
+    "sprite": "sprites/default/cannon.png",
+    "projectileSprite": "sprites/default/cannon_projectile.png"
+  }
+}

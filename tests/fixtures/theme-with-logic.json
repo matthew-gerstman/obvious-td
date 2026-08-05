@@ -1,0 +1,13 @@
+{
+  "theme": "broken-theme",
+  "overrides": {
+    "tower_gatling": {
+      "name": "Broken Override",
+      "description": "This override illegally sets a logic key.",
+      "sprite": "sprites/broken/gatling.png",
+      "logic": {
+        "damage": 999
+      }
+    }
+  }
+}

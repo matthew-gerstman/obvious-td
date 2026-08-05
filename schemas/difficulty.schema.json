@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Difficulty",
+  "type": "object",
+  "required": ["modes"],
+  "additionalProperties": false,
+  "definitions": {
+    "difficultyMode": {
+      "type": "object",
+      "required": ["hpMultiplier", "hpScalingRate", "startingGold", "startingLives"],
+      "additionalProperties": false,
+      "properties": {
+        "hpMultiplier": { "type": "number", "minimum": 0 },
+        "hpScalingRate": { "type": "number", "minimum": 0 },
+        "startingGold": { "type": "integer", "minimum": 0 },
+        "startingLives": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "properties": {
+    "modes": {
+      "type": "object",
+      "required": ["easy", "medium", "hard"],
+      "additionalProperties": false,
+      "properties": {
+        "easy": { "$ref": "#/definitions/difficultyMode" },
+        "medium": { "$ref": "#/definitions/difficultyMode" },
+        "hard": { "$ref": "#/definitions/difficultyMode" }
+      }
+    }
+  }
+}

@@ -1,0 +1,450 @@
+{
+  "id": "wave_table_default",
+  "waves": [
+    {
+      "wave": 1,
+      "enemies": [
+        {
+          "enemyId": "enemy_grunt",
+          "count": 5,
+          "interval": 1
+        }
+      ]
+    },
+    {
+      "wave": 2,
+      "enemies": [
+        {
+          "enemyId": "enemy_runner",
+          "count": 8,
+          "interval": 0.8
+        }
+      ]
+    },
+    {
+      "wave": 3,
+      "enemies": [
+        {
+          "enemyId": "enemy_grunt",
+          "count": 6,
+          "interval": 0.9
+        },
+        {
+          "enemyId": "enemy_runner",
+          "count": 4,
+          "interval": 0.8
+        }
+      ]
+    },
+    {
+      "wave": 4,
+      "enemies": [
+        {
+          "enemyId": "enemy_grunt",
+          "count": 10,
+          "interval": 0.8
+        }
+      ]
+    },
+    {
+      "wave": 5,
+      "enemies": [
+        {
+          "enemyId": "enemy_boss",
+          "count": 1,
+          "interval": 1
+        },
+        {
+          "enemyId": "enemy_grunt",
+          "count": 5,
+          "interval": 1
+        }
+      ]
+    },
+    {
+      "wave": 6,
+      "enemies": [
+        {
+          "enemyId": "enemy_grunt",
+          "count": 8,
+          "interval": 0.8
+        },
+        {
+          "enemyId": "enemy_flyer",
+          "count": 4,
+          "interval": 1
+        }
+      ]
+    },
+    {
+      "wave": 7,
+      "enemies": [
+        {
+          "enemyId": "enemy_runner",
+          "count": 12,
+          "interval": 0.6
+        }
+      ]
+    },
+    {
+      "wave": 8,
+      "enemies": [
+        {
+          "enemyId": "enemy_armored",
+          "count": 6,
+          "interval": 1
+        }
+      ]
+    },
+    {
+      "wave": 9,
+      "enemies": [
+        {
+          "enemyId": "enemy_grunt",
+          "count": 10,
+          "interval": 0.7
+        },
+        {
+          "enemyId": "enemy_flyer",
+          "count": 6,
+          "interval": 0.8
+        }
+      ]
+    },
+    {
+      "wave": 10,
+      "enemies": [
+        {
+          "enemyId": "enemy_boss",
+          "count": 1,
+          "interval": 1
+        },
+        {
+          "enemyId": "enemy_runner",
+          "count": 8,
+          "interval": 0.7
+        }
+      ]
+    },
+    {
+      "wave": 11,
+      "enemies": [
+        {
+          "enemyId": "enemy_swarm",
+          "count": 3,
+          "interval": 1.5
+        }
+      ]
+    },
+    {
+      "wave": 12,
+      "enemies": [
+        {
+          "enemyId": "enemy_armored",
+          "count": 5,
+          "interval": 0.9
+        },
+        {
+          "enemyId": "enemy_flyer",
+          "count": 5,
+          "interval": 0.8
+        }
+      ]
+    },
+    {
+      "wave": 13,
+      "enemies": [
+        {
+          "enemyId": "enemy_runner",
+          "count": 15,
+          "interval": 0.5
+        },
+        {
+          "enemyId": "enemy_grunt",
+          "count": 5,
+          "interval": 1
+        }
+      ]
+    },
+    {
+      "wave": 14,
+      "enemies": [
+        {
+          "enemyId": "enemy_swarm",
+          "count": 4,
+          "interval": 1.2
+        },
+        {
+          "enemyId": "enemy_armored",
+          "count": 4,
+          "interval": 1
+        }
+      ]
+    },
+    {
+      "wave": 15,
+      "enemies": [
+        {
+          "enemyId": "enemy_boss",
+          "count": 1,
+          "interval": 1
+        },
+        {
+          "enemyId": "enemy_armored",
+          "count": 5,
+          "interval": 0.9
+        }
+      ]
+    },
+    {
+      "wave": 16,
+      "enemies": [
+        {
+          "enemyId": "enemy_flyer",
+          "count": 10,
+          "interval": 0.6
+        },
+        {
+          "enemyId": "enemy_runner",
+          "count": 10,
+          "interval": 0.5
+        }
+      ]
+    },
+    {
+      "wave": 17,
+      "enemies": [
+        {
+          "enemyId": "enemy_grunt",
+          "count": 15,
+          "interval": 0.5
+        },
+        {
+          "enemyId": "enemy_swarm",
+          "count": 3,
+          "interval": 1.5
+        }
+      ]
+    },
+    {
+      "wave": 18,
+      "enemies": [
+        {
+          "enemyId": "enemy_armored",
+          "count": 8,
+          "interval": 0.8
+        },
+        {
+          "enemyId": "enemy_flyer",
+          "count": 6,
+          "interval": 0.7
+        }
+      ]
+    },
+    {
+      "wave": 19,
+      "enemies": [
+        {
+          "enemyId": "enemy_runner",
+          "count": 20,
+          "interval": 0.4
+        },
+        {
+          "enemyId": "enemy_swarm",
+          "count": 4,
+          "interval": 1
+        }
+      ]
+    },
+    {
+      "wave": 20,
+      "enemies": [
+        {
+          "enemyId": "enemy_boss",
+          "count": 1,
+          "interval": 1
+        },
+        {
+          "enemyId": "enemy_flyer",
+          "count": 8,
+          "interval": 0.6
+        },
+        {
+          "enemyId": "enemy_armored",
+          "count": 5,
+          "interval": 0.9
+        }
+      ]
+    },
+    {
+      "wave": 21,
+      "enemies": [
+        {
+          "enemyId": "enemy_swarm",
+          "count": 5,
+          "interval": 1
+        },
+        {
+          "enemyId": "enemy_grunt",
+          "count": 10,
+          "interval": 0.6
+        }
+      ]
+    },
+    {
+      "wave": 22,
+      "enemies": [
+        {
+          "enemyId": "enemy_armored",
+          "count": 10,
+          "interval": 0.7
+        },
+        {
+          "enemyId": "enemy_runner",
+          "count": 10,
+          "interval": 0.5
+        }
+      ]
+    },
+    {
+      "wave": 23,
+      "enemies": [
+        {
+          "enemyId": "enemy_flyer",
+          "count": 12,
+          "interval": 0.5
+        },
+        {
+          "enemyId": "enemy_swarm",
+          "count": 4,
+          "interval": 1.2
+        }
+      ]
+    },
+    {
+      "wave": 24,
+      "enemies": [
+        {
+          "enemyId": "enemy_grunt",
+          "count": 20,
+          "interval": 0.4
+        },
+        {
+          "enemyId": "enemy_armored",
+          "count": 6,
+          "interval": 0.8
+        }
+      ]
+    },
+    {
+      "wave": 25,
+      "enemies": [
+        {
+          "enemyId": "enemy_boss",
+          "count": 1,
+          "interval": 1
+        },
+        {
+          "enemyId": "enemy_swarm",
+          "count": 5,
+          "interval": 1
+        },
+        {
+          "enemyId": "enemy_flyer",
+          "count": 10,
+          "interval": 0.6
+        }
+      ]
+    },
+    {
+      "wave": 26,
+      "enemies": [
+        {
+          "enemyId": "enemy_runner",
+          "count": 25,
+          "interval": 0.3
+        },
+        {
+          "enemyId": "enemy_armored",
+          "count": 8,
+          "interval": 0.7
+        }
+      ]
+    },
+    {
+      "wave": 27,
+      "enemies": [
+        {
+          "enemyId": "enemy_swarm",
+          "count": 6,
+          "interval": 0.8
+        },
+        {
+          "enemyId": "enemy_flyer",
+          "count": 15,
+          "interval": 0.5
+        }
+      ]
+    },
+    {
+      "wave": 28,
+      "enemies": [
+        {
+          "enemyId": "enemy_armored",
+          "count": 12,
+          "interval": 0.6
+        },
+        {
+          "enemyId": "enemy_grunt",
+          "count": 15,
+          "interval": 0.5
+        }
+      ]
+    },
+    {
+      "wave": 29,
+      "enemies": [
+        {
+          "enemyId": "enemy_runner",
+          "count": 30,
+          "interval": 0.3
+        },
+        {
+          "enemyId": "enemy_swarm",
+          "count": 6,
+          "interval": 0.8
+        },
+        {
+          "enemyId": "enemy_flyer",
+          "count": 10,
+          "interval": 0.6
+        }
+      ]
+    },
+    {
+      "wave": 30,
+      "enemies": [
+        {
+          "enemyId": "enemy_boss",
+          "count": 1,
+          "interval": 1
+        },
+        {
+          "enemyId": "enemy_armored",
+          "count": 10,
+          "interval": 0.7
+        },
+        {
+          "enemyId": "enemy_flyer",
+          "count": 12,
+          "interval": 0.5
+        },
+        {
+          "enemyId": "enemy_swarm",
+          "count": 5,
+          "interval": 1
+        }
+      ]
+    }
+  ]
+}

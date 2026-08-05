@@ -1,0 +1,18 @@
+{
+  "id": "enemy_armored",
+  "type": "enemy",
+  "archetype": "armored",
+  "logic": {
+    "baseHP": 100,
+    "speed": 0.8,
+    "armor": 0.5,
+    "flying": false,
+    "goldReward": 12,
+    "isBoss": false
+  },
+  "presentation": {
+    "name": "Armored",
+    "description": "Slow, heavily armored enemy. Reduces non-armor-piercing damage by 50%. Requires armor-piercing or high-damage towers.",
+    "sprite": "sprites/default/armored.png"
+  }
+}

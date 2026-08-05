@@ -2,33 +2,71 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Tower",
   "type": "object",
-  "required": ["id", "name", "cost", "damage", "range", "fireRate"],
+  "required": ["id", "type", "archetype", "logic", "presentation"],
+  "additionalProperties": false,
   "properties": {
-    "id": {
+    "id": { "type": "string", "pattern": "^tower_" },
+    "type": { "type": "string", "const": "tower" },
+    "archetype": {
       "type": "string",
-      "minLength": 1
+      "enum": ["gatling", "cannon", "frost", "poison", "sniper", "aura", "economy"]
     },
-    "name": {
-      "type": "string",
-      "minLength": 1
+    "logic": {
+      "type": "object",
+      "required": ["tiers"],
+      "additionalProperties": false,
+      "properties": {
+        "tiers": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["tier", "cost", "damage", "cooldown", "range", "targeting", "hitsAir", "armorPiercing"],
+            "additionalProperties": false,
+            "properties": {
+              "tier": { "type": "integer", "enum": [1, 2, 3] },
+              "cost": { "type": "integer", "minimum": 1 },
+              "damage": { "type": "number", "minimum": 0 },
+              "cooldown": { "type": "number", "minimum": 0 },
+              "range": { "type": "number", "minimum": 0 },
+              "targeting": { "type": "string", "enum": ["first", "last", "strong", "close", "none"] },
+              "hitsAir": { "type": "boolean" },
+              "armorPiercing": { "type": "boolean" },
+              "splashRadius": { "type": "number", "minimum": 0 },
+              "slowFactor": { "type": "number", "minimum": 0, "maximum": 1 },
+              "slowDuration": { "type": "number", "minimum": 0 },
+              "dotDamage": { "type": "number", "minimum": 0 },
+              "dotDuration": { "type": "number", "minimum": 0 },
+              "dotTicks": { "type": "integer", "minimum": 1 },
+              "auraRadius": { "type": "number", "minimum": 0 },
+              "auraBuffs": {
+                "type": "object",
+                "required": ["damageMultiplier", "rangeMultiplier", "fireRateMultiplier"],
+                "additionalProperties": false,
+                "properties": {
+                  "damageMultiplier": { "type": "number" },
+                  "rangeMultiplier": { "type": "number" },
+                  "fireRateMultiplier": { "type": "number" }
+                }
+              },
+              "incomePerTick": { "type": "number", "minimum": 0 },
+              "incomeInterval": { "type": "number", "minimum": 0 }
+            }
+          }
+        }
+      }
     },
-    "cost": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "damage": {
-      "type": "number",
-      "minimum": 0
-    },
-    "range": {
-      "type": "number",
-      "minimum": 0
-    },
-    "fireRate": {
-      "type": "number",
-      "minimum": 0
+    "presentation": {
+      "type": "object",
+      "required": ["name", "description", "sprite"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "sprite": { "type": "string", "minLength": 1 },
+        "projectileSprite": { "type": "string", "minLength": 1 }
+      }
     }
-  },
-  "additionalProperties": false
+  }
 }
-
