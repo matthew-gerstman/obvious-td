@@ -20,6 +20,23 @@ interface RGB {
   b: number;
 }
 
+async function startGame(page: Page): Promise<void> {
+  await page.waitForFunction(
+    () =>
+      (window as unknown as { __game?: { isDataLoaded: () => boolean } })
+        .__game?.isDataLoaded() === true,
+  );
+  await page.evaluate(() => {
+    (window as unknown as { __startGame: (d: string, m: string) => boolean })
+      .__startGame('easy', 'map_single_path');
+  });
+  await page.waitForFunction(
+    () =>
+      (window as unknown as { __game?: { getState: () => string } })
+        .__game?.getState() === 'WAVE_PREP',
+  );
+}
+
 async function waitForGameSystems(page: Page): Promise<void> {
   await page.waitForFunction(
     () =>
@@ -101,6 +118,7 @@ async function waitForPixelNot(
 
 test('build panel appears when tapping a buildable tile', async ({ page }) => {
   await page.goto('/');
+  await startGame(page);
   await waitForGameSystems(page);
 
   // Tap buildable tile (2, 5)
@@ -129,6 +147,7 @@ test('tower appears at tile position after selecting from build panel', async ({
   page,
 }) => {
   await page.goto('/');
+  await startGame(page);
   await waitForGameSystems(page);
 
   // Tap buildable tile (2, 5) to show build panel
@@ -156,6 +175,7 @@ test('tower appears at tile position after selecting from build panel', async ({
 
 test('info panel appears when tapping an existing tower', async ({ page }) => {
   await page.goto('/');
+  await startGame(page);
   await waitForGameSystems(page);
 
   // Place a cannon at (2, 5)
@@ -183,6 +203,7 @@ test('info panel appears when tapping an existing tower', async ({ page }) => {
 
 test('tower is removed from canvas after selling', async ({ page }) => {
   await page.goto('/');
+  await startGame(page);
   await waitForGameSystems(page);
 
   // Place a cannon at (2, 5)
