@@ -1,0 +1,45 @@
+{
+  "id": "tower_sniper",
+  "type": "tower",
+  "archetype": "sniper",
+  "logic": {
+    "tiers": [
+      {
+        "tier": 1,
+        "cost": 150,
+        "damage": 80,
+        "cooldown": 2.0,
+        "range": 5.0,
+        "targeting": "strong",
+        "hitsAir": true,
+        "armorPiercing": true
+      },
+      {
+        "tier": 2,
+        "cost": 250,
+        "damage": 130,
+        "cooldown": 1.8,
+        "range": 5.5,
+        "targeting": "strong",
+        "hitsAir": true,
+        "armorPiercing": true
+      },
+      {
+        "tier": 3,
+        "cost": 400,
+        "damage": 200,
+        "cooldown": 1.5,
+        "range": 6.0,
+        "targeting": "strong",
+        "hitsAir": true,
+        "armorPiercing": true
+      }
+    ]
+  },
+  "presentation": {
+    "name": "Sniper Tower",
+    "description": "Long-range burst tower with armor-piercing rounds. Slow fire rate but devastating per-hit damage. Targets the strongest enemy and hits air.",
+    "sprite": "sprites/default/sniper.png",
+    "projectileSprite": "sprites/default/sniper_projectile.png"
+  }
+}

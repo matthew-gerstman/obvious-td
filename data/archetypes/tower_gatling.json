@@ -1,0 +1,45 @@
+{
+  "id": "tower_gatling",
+  "type": "tower",
+  "archetype": "gatling",
+  "logic": {
+    "tiers": [
+      {
+        "tier": 1,
+        "cost": 50,
+        "damage": 5,
+        "cooldown": 0.3,
+        "range": 2.5,
+        "targeting": "first",
+        "hitsAir": false,
+        "armorPiercing": false
+      },
+      {
+        "tier": 2,
+        "cost": 85,
+        "damage": 9,
+        "cooldown": 0.25,
+        "range": 2.5,
+        "targeting": "first",
+        "hitsAir": false,
+        "armorPiercing": false
+      },
+      {
+        "tier": 3,
+        "cost": 140,
+        "damage": 15,
+        "cooldown": 0.2,
+        "range": 3.0,
+        "targeting": "first",
+        "hitsAir": false,
+        "armorPiercing": false
+      }
+    ]
+  },
+  "presentation": {
+    "name": "Gatling Tower",
+    "description": "Cheap rapid-fire tower. Low damage per shot but high rate of fire makes it effective against unarmored enemies.",
+    "sprite": "sprites/default/gatling.png",
+    "projectileSprite": "sprites/default/gatling_projectile.png"
+  }
+}

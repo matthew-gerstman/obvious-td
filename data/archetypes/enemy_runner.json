@@ -1,0 +1,17 @@
+{
+  "id": "enemy_runner",
+  "type": "enemy",
+  "archetype": "runner",
+  "logic": {
+    "baseHP": 30,
+    "speed": 2.0,
+    "flying": false,
+    "goldReward": 5,
+    "isBoss": false
+  },
+  "presentation": {
+    "name": "Runner",
+    "description": "Fast, fragile enemy that rushes the exit. Low HP but high speed makes it dangerous if unguarded.",
+    "sprite": "sprites/default/runner.png"
+  }
+}

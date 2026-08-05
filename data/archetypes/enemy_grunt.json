@@ -1,0 +1,17 @@
+{
+  "id": "enemy_grunt",
+  "type": "enemy",
+  "archetype": "grunt",
+  "logic": {
+    "baseHP": 60,
+    "speed": 1.0,
+    "flying": false,
+    "goldReward": 8,
+    "isBoss": false
+  },
+  "presentation": {
+    "name": "Grunt",
+    "description": "Balanced enemy with moderate HP and speed. The backbone of most waves.",
+    "sprite": "sprites/default/grunt.png"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "enemy_boss",
+  "type": "enemy",
+  "archetype": "boss",
+  "logic": {
+    "baseHP": 300,
+    "speed": 0.6,
+    "armor": 0.3,
+    "flying": false,
+    "goldReward": 50,
+    "isBoss": true
+  },
+  "presentation": {
+    "name": "Boss",
+    "description": "Massive enemy with high HP, armor, and a large gold reward. Appears every 5 waves. Requires focused fire and upgraded towers.",
+    "sprite": "sprites/default/boss.png"
+  }
+}

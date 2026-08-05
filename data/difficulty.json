@@ -1,0 +1,22 @@
+{
+  "modes": {
+    "easy": {
+      "hpMultiplier": 0.7,
+      "hpScalingRate": 1.10,
+      "startingGold": 200,
+      "startingLives": 20
+    },
+    "medium": {
+      "hpMultiplier": 1.0,
+      "hpScalingRate": 1.15,
+      "startingGold": 150,
+      "startingLives": 15
+    },
+    "hard": {
+      "hpMultiplier": 1.5,
+      "hpScalingRate": 1.20,
+      "startingGold": 100,
+      "startingLives": 10
+    }
+  }
+}
