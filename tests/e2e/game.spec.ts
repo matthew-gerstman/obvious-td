@@ -416,10 +416,10 @@ test('return to title from defeat screen', async ({ page }) => {
         .__game?.getState() === 'DEFEAT',
   );
 
-  // Click Return to Title (center of button at ~320, 408)
+  // Click Return to Title (button center: x=224+96=320, y=360+24=384)
   await page.evaluate(() => {
     (window as unknown as { __resultScreen: { handleClick: (x: number, y: number) => void } })
-      .__resultScreen.handleClick(320, 408);
+      .__resultScreen.handleClick(320, 384);
   });
 
   // Verify state is TITLE
