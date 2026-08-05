@@ -1,6 +1,8 @@
 import { Renderer } from './renderer/renderer';
 import { GameLoop } from './engine/game-loop';
 import { createSolidColorSprite } from './renderer/sprite-loader';
+import { InputManager } from './input/input-manager';
+import type { TilePoint } from './input/coordinates';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement | null;
 if (!canvas) throw new Error('Canvas element #game not found');
@@ -45,3 +47,29 @@ gameLoop.start();
 
 // Expose for E2E testing
 (window as unknown as { __gameLoop: GameLoop }).__gameLoop = gameLoop;
+
+// Input layer — tile-based callback API for touch and mouse
+const inputState: {
+  lastTap: TilePoint | null;
+  lastHover: TilePoint | null;
+  lastDragStart: TilePoint | null;
+  lastDragMove: TilePoint | null;
+  lastDragEnd: TilePoint | null;
+} = {
+  lastTap: null,
+  lastHover: null,
+  lastDragStart: null,
+  lastDragMove: null,
+  lastDragEnd: null,
+};
+
+new InputManager(canvas, 32, {
+  onTileTap: (tile) => { inputState.lastTap = tile; },
+  onTileHover: (tile) => { inputState.lastHover = tile; },
+  onTileDragStart: (tile) => { inputState.lastDragStart = tile; },
+  onTileDragMove: (tile) => { inputState.lastDragMove = tile; },
+  onTileDragEnd: (tile) => { inputState.lastDragEnd = tile; },
+});
+
+// Expose input state for E2E testing
+(window as unknown as { __inputTestHook: typeof inputState }).__inputTestHook = inputState;
