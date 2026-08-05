@@ -19,39 +19,25 @@ test('canvas exists with touch-action: none', async ({ page }) => {
 test('sprite blits to expected pixel region', async ({ page }) => {
   await page.goto('/');
 
-  // Wait for the sprite to be drawn at logical (0, 0)
-  await page.waitForFunction(() => {
-    const canvas = document.getElementById('game') as HTMLCanvasElement | null;
-    if (!canvas) return false;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return false;
-    const dpr = window.devicePixelRatio || 1;
-    const data = ctx.getImageData(
-      Math.floor(5 * dpr),
-      Math.floor(5 * dpr),
-      1,
-      1,
-    ).data;
-    return data[0] !== 0 && data[3] !== 0;
+  // Stop the game loop so we can draw directly on the canvas
+  await page.evaluate(() => {
+    (window as unknown as { __gameLoop: GameLoopHandle }).__gameLoop.stop();
   });
 
-  // Verify the sprite pixel color at (5, 5) — should be #4a90d9
-  const spritePixel = await page.evaluate(() => {
+  // Draw a sprite at (0, 0) and verify the pixel
+  const spritePixel = await page.evaluate(async () => {
+    const { createSolidColorSprite } = await import('/src/renderer/sprite-loader.ts');
+    const { Renderer } = await import('/src/renderer/renderer.ts');
     const canvas = document.getElementById('game') as HTMLCanvasElement;
-    const ctx = canvas.getContext('2d')!;
+    const renderer = new Renderer(canvas, { tileSize: 32, mapWidth: 20, mapHeight: 15 });
+    const sprite = createSolidColorSprite(32, 32, '#4a90d9');
+    renderer.clear();
+    renderer.drawSprite(sprite, 0, 0);
     const dpr = window.devicePixelRatio || 1;
-    const data = ctx.getImageData(
-      Math.floor(5 * dpr),
-      Math.floor(5 * dpr),
-      1,
-      1,
+    const data = canvas.getContext('2d')!.getImageData(
+      Math.floor(5 * dpr), Math.floor(5 * dpr), 1, 1,
     ).data;
-    return {
-      r: data[0] ?? 0,
-      g: data[1] ?? 0,
-      b: data[2] ?? 0,
-      a: data[3] ?? 0,
-    };
+    return { r: data[0] ?? 0, g: data[1] ?? 0, b: data[2] ?? 0, a: data[3] ?? 0 };
   });
   expect(spritePixel.r).toBe(74);
   expect(spritePixel.g).toBe(144);
@@ -62,39 +48,23 @@ test('sprite blits to expected pixel region', async ({ page }) => {
 test('drawRect renders at expected pixel region', async ({ page }) => {
   await page.goto('/');
 
-  // Wait for the rect to be drawn at logical (64, 0)
-  await page.waitForFunction(() => {
-    const canvas = document.getElementById('game') as HTMLCanvasElement | null;
-    if (!canvas) return false;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return false;
-    const dpr = window.devicePixelRatio || 1;
-    const data = ctx.getImageData(
-      Math.floor(69 * dpr),
-      Math.floor(5 * dpr),
-      1,
-      1,
-    ).data;
-    return data[0] !== 0 && data[3] !== 0;
+  // Stop the game loop so we can draw directly on the canvas
+  await page.evaluate(() => {
+    (window as unknown as { __gameLoop: GameLoopHandle }).__gameLoop.stop();
   });
 
-  // Verify the rect pixel color at (69, 5) — should be #ff6b6b
-  const rectPixel = await page.evaluate(() => {
+  // Draw a rect at (64, 0) and verify the pixel
+  const rectPixel = await page.evaluate(async () => {
+    const { Renderer } = await import('/src/renderer/renderer.ts');
     const canvas = document.getElementById('game') as HTMLCanvasElement;
-    const ctx = canvas.getContext('2d')!;
+    const renderer = new Renderer(canvas, { tileSize: 32, mapWidth: 20, mapHeight: 15 });
+    renderer.clear();
+    renderer.drawRect(64, 0, 32, 32, '#ff6b6b');
     const dpr = window.devicePixelRatio || 1;
-    const data = ctx.getImageData(
-      Math.floor(69 * dpr),
-      Math.floor(5 * dpr),
-      1,
-      1,
+    const data = canvas.getContext('2d')!.getImageData(
+      Math.floor(69 * dpr), Math.floor(5 * dpr), 1, 1,
     ).data;
-    return {
-      r: data[0] ?? 0,
-      g: data[1] ?? 0,
-      b: data[2] ?? 0,
-      a: data[3] ?? 0,
-    };
+    return { r: data[0] ?? 0, g: data[1] ?? 0, b: data[2] ?? 0, a: data[3] ?? 0 };
   });
   expect(rectPixel.r).toBe(255);
   expect(rectPixel.g).toBe(107);

@@ -252,6 +252,20 @@ test('game loop integration — sniper kills wave enemies', async ({ page }) => 
   await page.goto('/');
   await waitForCombatSystems(page);
 
+  // Start the game so the game loop update processes wave runner + combat
+  await page.waitForFunction(
+    () => (window as unknown as { __game?: { isDataLoaded: () => boolean } })
+      .__game?.isDataLoaded() === true,
+  );
+  await page.evaluate(() => {
+    (window as unknown as { __startGame: (d: string, m: string) => boolean })
+      .__startGame('easy', 'map_single_path');
+  });
+  await page.waitForFunction(
+    () => (window as unknown as { __game?: { getState: () => string } })
+      .__game?.getState() === 'WAVE_PREP',
+  );
+
   await page.evaluate(() => {
     (window as unknown as { __gameLoop: GameLoopHandle }).__gameLoop.stop();
   });
@@ -301,18 +315,6 @@ test('game loop integration — sniper kills wave enemies', async ({ page }) => 
       }
     ).__waveRunner;
 
-    const gameMap = (
-      window as unknown as { __gameMap: unknown }
-    ).__gameMap;
-    const waveTable = (
-      window as unknown as { __waveTable: unknown }
-    ).__waveTable;
-    const enemyArchetypes = (
-      window as unknown as { __enemyArchetypes: Record<string, unknown> }
-    ).__enemyArchetypes;
-    const difficulty = (
-      window as unknown as { __difficulty: unknown }
-    ).__difficulty;
     const towerArchetypes = (
       window as unknown as {
         __towerArchetypes: {
@@ -341,14 +343,9 @@ test('game loop integration — sniper kills wave enemies', async ({ page }) => 
 
     const goldBefore = economyManager.getGold();
 
-    // Start wave 1 (5 grunts, interval 1s)
-    waveRunner.startWave(
-      1,
-      waveTable,
-      enemyArchetypes,
-      difficulty,
-      gameMap,
-    );
+    // Start wave 1 via the game's startWave (transitions to WAVE_ACTIVE)
+    const game = (window as unknown as { __game: { startWave: () => void } }).__game;
+    game.startWave();
 
     // Step game loop 10 times — first grunt spawns and dies
     gameLoop.step(10);
