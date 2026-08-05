@@ -8,7 +8,10 @@ import { renderMap } from './maps/map-renderer';
 import { TowerManager } from './towers/tower-manager';
 import { EconomyManager } from './economy/economy-manager';
 import { TowerUI, TOWER_COLORS } from './towers/tower-ui';
-import type { TowerData, DifficultyMode } from './logic/types';
+import type { TowerData, DifficultyMode, EnemyData, WaveTable } from './logic/types';
+import { WaveRunner } from './waves/wave-runner';
+import { CombatManager } from './combat/combat-manager';
+import { ProjectileManager } from './combat/projectile';
 
 const TILE_SIZE = 32;
 const MAP_WIDTH = 20;
@@ -33,11 +36,20 @@ let towerManager: TowerManager | null = null;
 let economyManager: EconomyManager | null = null;
 let towerUI: TowerUI | null = null;
 let gameMap: GameMap | null = null;
+let waveRunner: WaveRunner | null = null;
+let combatManager: CombatManager | null = null;
+let projectileManager: ProjectileManager | null = null;
 
 const update = (dt: number): void => {
   tick++;
   if (economyManager && towerManager) {
     economyManager.processEconomyIncome(towerManager.getAllTowers(), dt);
+  }
+  if (waveRunner && gameMap) {
+    waveRunner.update(dt, gameMap);
+  }
+  if (combatManager && towerManager && waveRunner) {
+    combatManager.update(dt, towerManager.getAllTowers(), waveRunner.getAliveEnemies());
   }
 };
 
@@ -78,6 +90,25 @@ const render = (alpha: number): void => {
         );
       }
     }
+  }
+
+  // Render enemies
+  if (waveRunner) {
+    for (const enemy of waveRunner.getAliveEnemies()) {
+      const color = enemy.flying ? '#ff6b6b' : '#e03939';
+      renderer.drawRect(
+        enemy.x * TILE_SIZE + 8,
+        enemy.y * TILE_SIZE + 8,
+        TILE_SIZE - 16,
+        TILE_SIZE - 16,
+        color,
+      );
+    }
+  }
+
+  // Render projectiles
+  if (projectileManager) {
+    projectileManager.render(renderer, TILE_SIZE);
   }
 
   // Moving rect for visual feedback (renderer.spec.ts)
@@ -168,12 +199,38 @@ async function initGame(): Promise<void> {
   towerManager = new TowerManager(gameMap);
   towerUI = new TowerUI(renderer, towerManager, economyManager, towerArchetypes, TILE_SIZE, MAP_WIDTH);
 
+  // Load enemy data
+  const enemyFiles = ['grunt', 'runner', 'armored', 'flyer', 'swarm', 'boss'];
+  const enemyArchetypes: Record<string, EnemyData> = {};
+  await Promise.all(
+    enemyFiles.map(async (name) => {
+      const res = await fetch(`/data/archetypes/enemy_${name}.json`);
+      const data = (await res.json()) as EnemyData;
+      enemyArchetypes[data.id] = data;
+    }),
+  );
+
+  // Load wave table
+  const waveResponse = await fetch('/data/waves/wave_table.json');
+  const waveTable = (await waveResponse.json()) as WaveTable;
+
+  // Create combat systems
+  waveRunner = new WaveRunner();
+  projectileManager = new ProjectileManager();
+  combatManager = new CombatManager(economyManager, projectileManager);
+
   // Expose for E2E testing
   (window as unknown as { __towerManager: TowerManager }).__towerManager = towerManager;
   (window as unknown as { __economyManager: EconomyManager }).__economyManager = economyManager;
   (window as unknown as { __towerUI: TowerUI }).__towerUI = towerUI;
   (window as unknown as { __gameMap: GameMap }).__gameMap = gameMap;
   (window as unknown as { __towerArchetypes: TowerData[] }).__towerArchetypes = towerArchetypes;
+  (window as unknown as { __waveRunner: WaveRunner }).__waveRunner = waveRunner;
+  (window as unknown as { __combatManager: CombatManager }).__combatManager = combatManager;
+  (window as unknown as { __projectileManager: ProjectileManager }).__projectileManager = projectileManager;
+  (window as unknown as { __enemyArchetypes: Record<string, EnemyData> }).__enemyArchetypes = enemyArchetypes;
+  (window as unknown as { __waveTable: WaveTable }).__waveTable = waveTable;
+  (window as unknown as { __difficulty: DifficultyMode }).__difficulty = easyMode;
 }
 
 void initGame();
