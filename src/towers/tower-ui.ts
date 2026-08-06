@@ -398,34 +398,29 @@ export class TowerUI {
   private renderBuildOverlay(): void {
     if (!this.selectedTile) return;
 
-    // Show range circle at the selected tile using the first archetype's range
-    const firstArchetype = this.archetypes[0];
-    if (firstArchetype) {
-      const tier1 = firstArchetype.logic.tiers.find((t) => t.tier === 1);
-      if (tier1) {
-        this.drawRangeCircle(this.selectedTile.x, this.selectedTile.y, tier1.range);
-      }
+    // Only show range circle and ghost preview when the user is hovering
+    // over a specific tower type in the build panel. Without a specific
+    // tower type, showing a range circle is misleading — it implies a
+    // tower placement intent that doesn't exist yet.
+    const hoveredArchetype = this.getHoveredArchetype();
+    if (!hoveredArchetype) return;
+
+    const tier1 = hoveredArchetype.logic.tiers.find((t) => t.tier === 1);
+    if (tier1) {
+      this.drawRangeCircle(this.selectedTile.x, this.selectedTile.y, tier1.range);
     }
 
-    // Ghost preview follows the hovered tile (only when different from selected)
-    if (
-      this.hoverTile &&
-      (this.hoverTile.x !== this.selectedTile.x ||
-        this.hoverTile.y !== this.selectedTile.y)
-    ) {
-      const archetype = this.getHoveredArchetype() ?? firstArchetype;
-      if (archetype) {
-        this.drawGhostPreview(this.hoverTile, archetype);
-      }
+    // Ghost preview at the selected tile shows what the hovered tower type
+    // would look like if placed there.
+    this.drawGhostPreview(this.selectedTile, hoveredArchetype);
 
-      const buildable =
-        this.towerManager.isBuildable(this.hoverTile.x, this.hoverTile.y) &&
-        !this.towerManager.isTileOccupied(this.hoverTile.x, this.hoverTile.y);
-      this.drawTileBorder(
-        this.hoverTile,
-        buildable ? TowerUI.GHOST_VALID : TowerUI.GHOST_INVALID,
-      );
-    }
+    const buildable =
+      this.towerManager.isBuildable(this.selectedTile.x, this.selectedTile.y) &&
+      !this.towerManager.isTileOccupied(this.selectedTile.x, this.selectedTile.y);
+    this.drawTileBorder(
+      this.selectedTile,
+      buildable ? TowerUI.GHOST_VALID : TowerUI.GHOST_INVALID,
+    );
   }
 
   /** Render range circle when a tower is selected (info panel). */
