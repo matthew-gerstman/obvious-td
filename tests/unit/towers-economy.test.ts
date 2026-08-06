@@ -12,7 +12,7 @@ function setupGame(): {
   economy: EconomyManager;
   manager: TowerManager;
 } {
-  const mapJson = JSON.parse(readFileSync('data/maps/map_single_path.json', 'utf-8'));
+  const mapJson = JSON.parse(readFileSync('public/data/maps/map_single_path.json', 'utf-8'));
   const gameMap = loadMap(mapJson as object);
   const towers = loadTowerData();
   const diff = loadDifficultyMode('easy');

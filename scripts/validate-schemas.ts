@@ -3,10 +3,10 @@ import { join } from 'node:path';
 import Ajv from 'ajv';
 
 const SCHEMAS_DIR = 'schemas';
-const DATA_ARCHETYPES_DIR = 'data/archetypes';
-const DATA_MAPS_DIR = 'data/maps';
-const DATA_THEMES_DIR = 'data/themes';
-const DATA_WAVES_DIR = 'data/waves';
+const DATA_ARCHETYPES_DIR = 'public/data/archetypes';
+const DATA_MAPS_DIR = 'public/data/maps';
+const DATA_THEMES_DIR = 'public/data/themes';
+const DATA_WAVES_DIR = 'public/data/waves';
 
 /**
  * Validates all game data files against their corresponding JSON schemas.
@@ -70,7 +70,7 @@ function main(): void {
   check(join(DATA_WAVES_DIR, 'wave_table.json'), waveTableValidate, 'wave table: wave_table.json');
 
   // Difficulty
-  check('data/difficulty.json', difficultyValidate, 'difficulty: difficulty.json');
+  check('public/data/difficulty.json', difficultyValidate, 'difficulty: difficulty.json');
 
   if (failures > 0) {
     console.error(`\n${failures} validation failure(s)`);

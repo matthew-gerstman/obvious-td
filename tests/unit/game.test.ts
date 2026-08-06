@@ -66,7 +66,7 @@ beforeAll(() => {
 
   // Mock fetch to read from the filesystem
   global.fetch = vi.fn((url: string) => {
-    const filePath = url.replace(/^\//, '');
+    const filePath = url.replace(/^\//, 'public/');
     const fullPath = path.resolve(__dirname, '../../', filePath);
     const data = JSON.parse(fs.readFileSync(fullPath, 'utf-8'));
     return Promise.resolve({ json: () => Promise.resolve(data) }) as unknown as Response;

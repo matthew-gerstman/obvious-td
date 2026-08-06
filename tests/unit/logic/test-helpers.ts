@@ -15,7 +15,7 @@ function loadJson(filePath: string): unknown {
 }
 
 export function loadDifficultyConfig(): DifficultyConfig {
-  return loadJson('data/difficulty.json') as DifficultyConfig;
+  return loadJson('public/data/difficulty.json') as DifficultyConfig;
 }
 
 export function loadDifficultyMode(mode: 'easy' | 'medium' | 'hard'): DifficultyMode {
@@ -26,7 +26,7 @@ export function loadDifficultyMode(mode: 'easy' | 'medium' | 'hard'): Difficulty
 }
 
 export function loadEnemyData(): Record<string, EnemyLogic> {
-  const dir = 'data/archetypes';
+  const dir = 'public/data/archetypes';
   const files = readdirSync(dir).filter((f) => f.startsWith('enemy_') && f.endsWith('.json'));
   const result: Record<string, EnemyLogic> = {};
   for (const file of files) {
@@ -37,16 +37,16 @@ export function loadEnemyData(): Record<string, EnemyLogic> {
 }
 
 export function loadTowerData(): TowerData[] {
-  const dir = 'data/archetypes';
+  const dir = 'public/data/archetypes';
   const files = readdirSync(dir).filter((f) => f.startsWith('tower_') && f.endsWith('.json'));
   return files.map((f) => loadJson(join(dir, f)) as TowerData);
 }
 
 export function loadWaveTable(): WaveTable {
-  return loadJson('data/waves/wave_table.json') as WaveTable;
+  return loadJson('public/data/waves/wave_table.json') as WaveTable;
 }
 
 export function loadMap(mapId: string): MapData {
-  return loadJson(`data/maps/${mapId}.json`) as MapData;
+  return loadJson(`public/data/maps/${mapId}.json`) as MapData;
 }
 
