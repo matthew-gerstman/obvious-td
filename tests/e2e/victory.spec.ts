@@ -186,12 +186,13 @@ test('headless victory on Easy with automated tower placement', async ({ page })
         // keep placing until gold runs out or tiles are full
       }
 
-      // Phase 6: Upgrade all towers — damage first (survive early), then utility, then economy
+      // Phase 6: Upgrade all towers — Gatling first (cheap early DPS), then Frost
+      // (slow is a force multiplier on ALL tower DPS), then heavy damage, then economy
       const upgradeOrder = [
         'tower_gatling',
+        'tower_frost',
         'tower_cannon',
         'tower_sniper',
-        'tower_frost',
         'tower_economy',
       ];
       for (const archId of upgradeOrder) {
