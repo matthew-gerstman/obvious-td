@@ -238,32 +238,36 @@ test('build panel shows sprite icons with pixel diversity', async ({ page }) => 
   );
 
   // Panel is at (96, 160). First row icon at (102, 200), size 20x20.
-  // Wait for the sprite to appear — in CI the render loop may not have
-  // drawn sprites on the first frame after the panel opens.
+  // Wait for the sprite to render with pixel diversity. Sprites have
+  // transparent pixels (showing panel bg) + multiple sprite colors,
+  // giving ≥3 distinct colors. A flat drawRect fallback gives only 1.
+  // Poll for diversity ≥3 so the test only proceeds once the sprite is drawn.
   await page.waitForFunction(
     () => {
       const canvas = document.getElementById('game') as HTMLCanvasElement;
       const ctx = canvas.getContext('2d')!;
       const dpr = window.devicePixelRatio || 1;
-      // Check center of icon area for a non-background pixel
-      const data = ctx.getImageData(
-        Math.floor(112 * dpr),
-        Math.floor(210 * dpr),
-        1, 1,
-      ).data;
-      // Panel background is dark (~RGB 17,18,31). Sprite pixels are brighter.
-      return data[0] + data[1] + data[2] > 80;
+      const colors = new Set<string>();
+      for (let dy = 0; dy < 20; dy += 2) {
+        for (let dx = 0; dx < 20; dx += 2) {
+          const px = Math.floor((102 + dx) * dpr);
+          const py = Math.floor((200 + dy) * dpr);
+          const data = ctx.getImageData(px, py, 1, 1).data;
+          if (data[3]! > 0) {
+            colors.add(`${data[0]},${data[1]},${data[2]}`);
+          }
+        }
+      }
+      return colors.size >= 3;
     },
     { timeout: 5000 },
   );
 
-  // Sprites produce multiple distinct colors; a flat drawRect would produce 1-2.
+  // Re-sample to assert the diversity value for the test report
   const diversity = await page.evaluate(() => {
     const canvas = document.getElementById('game') as HTMLCanvasElement;
     const ctx = canvas.getContext('2d')!;
     const dpr = window.devicePixelRatio || 1;
-
-    // Sample the icon area at (102, 200) to (122, 220)
     const colors = new Set<string>();
     for (let dy = 0; dy < 20; dy += 2) {
       for (let dx = 0; dx < 20; dx += 2) {
@@ -321,19 +325,25 @@ test('build panel dims unaffordable tower icons', async ({ page }) => {
     { timeout: 5000 },
   );
 
-  // Wait for sprites to render — in CI the render loop may lag behind panel state.
+  // Wait for the gatling icon to render. Gatling is blue (#4a90d9, B=217).
+  // Background has B ≈ 41. Sample a 20x20 area and check for any pixel
+  // with B > 100, indicating the icon color is present.
   await page.waitForFunction(
     () => {
       const canvas = document.getElementById('game') as HTMLCanvasElement;
       const ctx = canvas.getContext('2d')!;
       const dpr = window.devicePixelRatio || 1;
-      // Check gatling icon center for a non-background pixel
-      const data = ctx.getImageData(
-        Math.floor(176 * dpr),
-        Math.floor(210 * dpr),
-        1, 1,
-      ).data;
-      return data[0] + data[1] + data[2] > 80;
+      for (let dy = 0; dy < 20; dy += 4) {
+        for (let dx = 0; dx < 20; dx += 4) {
+          const data = ctx.getImageData(
+            Math.floor((166 + dx) * dpr),
+            Math.floor((200 + dy) * dpr),
+            1, 1,
+          ).data;
+          if (data[2]! > 100) return true;
+        }
+      }
+      return false;
     },
     { timeout: 5000 },
   );

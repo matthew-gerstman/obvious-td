@@ -4,11 +4,34 @@ export type Sprite = HTMLImageElement | ImageBitmap | HTMLCanvasElement;
 
 /** Load an image from a URL or data URI. Rejects on load error. */
 export async function loadSprite(src: string): Promise<HTMLImageElement> {
+  // Try fetch + blob first — more reliable in headless browsers where
+  // Image.src can silently fail without firing onerror.
+  try {
+    const res = await fetch(src);
+    if (res.ok) {
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      try {
+        return await loadImgFromUrl(url);
+      } finally {
+        // Revoke after the image is decoded — the browser keeps the pixel data
+        URL.revokeObjectURL(url);
+      }
+    }
+  } catch {
+    // fetch failed (e.g. data URI or non-HTTP path) — fall through to Image.src
+  }
+
+  // Fallback: direct Image.src assignment
+  return loadImgFromUrl(src);
+}
+
+function loadImgFromUrl(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error(`Failed to load sprite: ${src}`));
-    img.src = src;
+    img.onerror = () => reject(new Error(`Failed to load sprite: ${url}`));
+    img.src = url;
   });
 }
 
