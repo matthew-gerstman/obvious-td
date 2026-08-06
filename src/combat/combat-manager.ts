@@ -8,6 +8,7 @@ import { applyTowerDamage } from './damage-application';
 import { tickDoTs } from './dot-manager';
 import { applyAuras, clearAuras } from './aura-manager';
 import { ProjectileManager } from './projectile';
+import type { MuzzleFlashManager } from './muzzle-flash';
 
 /**
  * Orchestrates combat resolution during the game loop's update phase.
@@ -17,10 +18,16 @@ import { ProjectileManager } from './projectile';
 export class CombatManager {
   private economyManager: EconomyManager;
   private projectileManager: ProjectileManager;
+  private muzzleFlashManager: MuzzleFlashManager | null;
 
-  constructor(economyManager: EconomyManager, projectileManager?: ProjectileManager) {
+  constructor(
+    economyManager: EconomyManager,
+    projectileManager?: ProjectileManager,
+    muzzleFlashManager?: MuzzleFlashManager | null,
+  ) {
     this.economyManager = economyManager;
     this.projectileManager = projectileManager ?? new ProjectileManager();
+    this.muzzleFlashManager = muzzleFlashManager ?? null;
   }
 
   /**
@@ -74,6 +81,15 @@ export class CombatManager {
         target.y,
         tower.archetype.archetype,
         tower.archetype.presentation?.projectileSprite,
+      );
+
+      // Muzzle flash visual feedback
+      this.muzzleFlashManager?.spawnFlash(
+        tower.tileX,
+        tower.tileY,
+        target.x,
+        target.y,
+        tower.archetype.archetype,
       );
 
       // Reset cooldown using effective cooldown (may be shortened by aura fire-rate buff)

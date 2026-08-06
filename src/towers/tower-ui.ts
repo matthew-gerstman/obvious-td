@@ -1,4 +1,5 @@
 import type { Renderer } from '../renderer/renderer';
+import type { SpriteCache } from '../renderer/sprite-loader';
 import type { TowerManager } from './tower-manager';
 import type { EconomyManager } from '../economy/economy-manager';
 import type { TowerData } from '../logic/types';
@@ -36,6 +37,11 @@ const INFO_LINE_HEIGHT = 22;
 const BUILD_PANEL_WIDTH = 260;
 const INFO_PANEL_WIDTH = 240;
 
+// Game area bounds — panels must stay within this vertical region
+// to avoid overlapping the HUD button row at the bottom of the canvas.
+const GAME_AREA_TOP = 32;
+const GAME_AREA_BOTTOM = 448;
+
 export type PanelMode = 'none' | 'build' | 'info';
 
 export interface TowerUIState {
@@ -71,10 +77,12 @@ export class TowerUI {
   private archetypes: TowerData[];
   private tileSize: number;
   private mapWidthPx: number;
+  private spriteCache: SpriteCache | null;
 
   panelMode: PanelMode = 'none';
   selectedTile: TilePoint | null = null;
   selectedTowerId: string | null = null;
+  hoverTile: TilePoint | null = null;
 
   // Panel position in canvas coordinates
   private panelX = 0;
@@ -94,6 +102,7 @@ export class TowerUI {
     archetypes: TowerData[],
     tileSize: number,
     mapWidthTiles: number,
+    spriteCache?: SpriteCache | null,
   ) {
     this.renderer = renderer;
     this.towerManager = towerManager;
@@ -101,6 +110,7 @@ export class TowerUI {
     this.archetypes = archetypes;
     this.tileSize = tileSize;
     this.mapWidthPx = mapWidthTiles * tileSize;
+    this.spriteCache = spriteCache ?? null;
   }
 
   getState(): TowerUIState {
@@ -115,9 +125,15 @@ export class TowerUI {
     this.panelMode = 'none';
     this.selectedTile = null;
     this.selectedTowerId = null;
+    this.hoverTile = null;
     this.buildRows = [];
     this.upgradeButton = null;
     this.sellButton = null;
+  }
+
+  /** Update the hovered tile for ghost preview and range circle display. */
+  setHoverTile(tile: TilePoint | null): void {
+    this.hoverTile = tile;
   }
 
   /**
@@ -169,6 +185,7 @@ export class TowerUI {
     this.panelHeight = TITLE_HEIGHT + PANEL_PADDING * 2 + this.archetypes.length * ROW_HEIGHT;
 
     this.clampPanelToRight(tile);
+    this.clampPanelToBottom();
 
     this.buildRows = [];
     let rowY = this.panelY + TITLE_HEIGHT + PANEL_PADDING;
@@ -199,6 +216,7 @@ export class TowerUI {
       PANEL_PADDING;
 
     this.clampPanelToRight(tile);
+    this.clampPanelToBottom();
 
     const buttonY =
       this.panelY +
@@ -225,6 +243,16 @@ export class TowerUI {
     if (this.panelX + this.panelWidth > this.mapWidthPx) {
       this.panelX = tile.x * this.tileSize - this.panelWidth;
       if (this.panelX < 0) this.panelX = 0;
+    }
+  }
+
+  /** If panel would overflow the bottom of the game area, shift it up. */
+  private clampPanelToBottom(): void {
+    if (this.panelY + this.panelHeight > GAME_AREA_BOTTOM) {
+      this.panelY = GAME_AREA_BOTTOM - this.panelHeight;
+    }
+    if (this.panelY < GAME_AREA_TOP) {
+      this.panelY = GAME_AREA_TOP;
     }
   }
 
@@ -293,15 +321,135 @@ export class TowerUI {
   }
 
   /**
-   * Renders the active panel (if any) on the canvas.
+   * Renders range circles, ghost previews, and the active panel on the canvas.
    * Call after rendering the map and towers.
    */
   render(): void {
     if (this.panelMode === 'build') {
+      this.renderBuildOverlay();
       this.renderBuildPanel();
     } else if (this.panelMode === 'info') {
+      this.renderInfoOverlay();
       this.renderInfoPanel();
     }
+  }
+
+  // ── Range circle + ghost preview overlays ─────────────────────
+
+  /** Range circle fill and outline color. */
+  private static readonly RANGE_FILL = 'rgba(100, 200, 255, 1)';
+  private static readonly RANGE_OUTLINE = 'rgba(100, 200, 255, 1)';
+  private static readonly GHOST_VALID = '#51cf66';
+  private static readonly GHOST_INVALID = '#ff6b6b';
+
+  /** Draw a semi-transparent range circle centered on a tile. */
+  private drawRangeCircle(tileX: number, tileY: number, range: number): void {
+    const cx = tileX * this.tileSize + this.tileSize / 2;
+    const cy = tileY * this.tileSize + this.tileSize / 2;
+    const radius = range * this.tileSize;
+
+    this.renderer.save();
+    this.renderer.setAlpha(0.2);
+    this.renderer.drawCircle(cx, cy, radius, TowerUI.RANGE_FILL);
+    this.renderer.restore();
+
+    this.renderer.drawStrokeCircle(cx, cy, radius, TowerUI.RANGE_OUTLINE, 2);
+  }
+
+  /** Draw a semi-transparent ghost tower sprite at the hovered tile. */
+  private drawGhostPreview(tile: TilePoint, archetype: TowerData): void {
+    const x = tile.x * this.tileSize;
+    const y = tile.y * this.tileSize;
+
+    const spritePath = archetype.presentation?.sprite;
+    const sprite = spritePath ? this.spriteCache?.get(spritePath) : null;
+
+    this.renderer.save();
+    this.renderer.setAlpha(0.5);
+    if (sprite) {
+      this.renderer.drawSprite(sprite, x, y, this.tileSize, this.tileSize);
+    } else {
+      const color = TOWER_COLORS[archetype.archetype] ?? '#888';
+      const inset = 4;
+      this.renderer.drawRect(
+        x + inset,
+        y + inset,
+        this.tileSize - inset * 2,
+        this.tileSize - inset * 2,
+        color,
+      );
+    }
+    this.renderer.restore();
+  }
+
+  /** Draw a colored border around a tile (green = valid, red = invalid). */
+  private drawTileBorder(tile: TilePoint, color: string): void {
+    this.renderer.drawStrokeRect(
+      tile.x * this.tileSize,
+      tile.y * this.tileSize,
+      this.tileSize,
+      this.tileSize,
+      color,
+      2,
+    );
+  }
+
+  /** Render range circle and ghost preview when the build panel is open. */
+  private renderBuildOverlay(): void {
+    if (!this.selectedTile) return;
+
+    // Only show range circle and ghost preview when the user is hovering
+    // over a specific tower type in the build panel. Without a specific
+    // tower type, showing a range circle is misleading — it implies a
+    // tower placement intent that doesn't exist yet.
+    const hoveredArchetype = this.getHoveredArchetype();
+    if (!hoveredArchetype) return;
+
+    const tier1 = hoveredArchetype.logic.tiers.find((t) => t.tier === 1);
+    if (tier1) {
+      this.drawRangeCircle(this.selectedTile.x, this.selectedTile.y, tier1.range);
+    }
+
+    // Ghost preview at the selected tile shows what the hovered tower type
+    // would look like if placed there.
+    this.drawGhostPreview(this.selectedTile, hoveredArchetype);
+
+    const buildable =
+      this.towerManager.isBuildable(this.selectedTile.x, this.selectedTile.y) &&
+      !this.towerManager.isTileOccupied(this.selectedTile.x, this.selectedTile.y);
+    this.drawTileBorder(
+      this.selectedTile,
+      buildable ? TowerUI.GHOST_VALID : TowerUI.GHOST_INVALID,
+    );
+  }
+
+  /** Render range circle when a tower is selected (info panel). */
+  private renderInfoOverlay(): void {
+    if (!this.selectedTowerId) return;
+    const tower = this.towerManager
+      .getAllTowers()
+      .find((t) => t.id === this.selectedTowerId);
+    if (!tower) return;
+
+    this.drawRangeCircle(tower.tileX, tower.tileY, tower.effectiveRange);
+  }
+
+  /** Check if the hover tile falls within a build panel row and return that archetype. */
+  private getHoveredArchetype(): TowerData | null {
+    if (!this.hoverTile) return null;
+    const tapX = this.hoverTile.x * this.tileSize + this.tileSize / 2;
+    const tapY = this.hoverTile.y * this.tileSize + this.tileSize / 2;
+    for (const row of this.buildRows) {
+      if (
+        tapY >= row.y &&
+        tapY < row.y + row.h &&
+        tapX >= this.panelX &&
+        tapX < this.panelX + this.panelWidth
+      ) {
+        return row.archetype;
+      }
+    }
+    return null;
   }
 
   private drawPanelBorder(): void {
@@ -355,9 +503,23 @@ export class TowerUI {
         );
       }
 
-      // Color indicator
-      const color = TOWER_COLORS[archetype.archetype] ?? '#888';
-      this.renderer.drawRect(this.panelX + PANEL_PADDING, rowY + 6, 20, ROW_HEIGHT - 12, color);
+      // Sprite icon with affordability dimming
+      const iconX = this.panelX + PANEL_PADDING;
+      const iconY = rowY + 6;
+      const iconSize = ROW_HEIGHT - 12;
+      const affordable = this.economyManager.getGold() >= tier1.cost;
+      const spritePath = archetype.presentation?.sprite;
+      const sprite = spritePath ? this.spriteCache?.get(spritePath) : null;
+
+      this.renderer.save();
+      if (!affordable) this.renderer.setAlpha(0.4);
+      if (sprite) {
+        this.renderer.drawSprite(sprite, iconX, iconY, iconSize, iconSize);
+      } else {
+        const color = TOWER_COLORS[archetype.archetype] ?? '#888';
+        this.renderer.drawRect(iconX, iconY, iconSize, iconSize, color);
+      }
+      this.renderer.restore();
 
       // Name
       const name = archetype.presentation?.name ?? archetype.archetype;
