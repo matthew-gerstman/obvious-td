@@ -159,8 +159,8 @@ test('headless victory on Easy with automated tower placement', async ({ page })
         return false;
       };
 
-      // Phase 1: Economy tower on non-adjacent tile (up to 2 total)
-      if (countByType('tower_economy') < 2) {
+      // Phase 1: Economy tower on non-adjacent tile (up to 3 total)
+      if (countByType('tower_economy') < 3) {
         const tileList = nonAdjacentTiles.length > 0 ? nonAdjacentTiles : adjacentTiles;
         tryPlace(economy, tileList);
       }
@@ -170,14 +170,14 @@ test('headless victory on Easy with automated tower placement', async ({ page })
         tryPlace(frost, adjacentTiles);
       }
 
-      // Phase 3: Cannon on adjacent tile (up to 2 total)
-      if (countByType('tower_cannon') < 2) {
+      // Phase 3: Cannon on adjacent tile (up to 3 total)
+      if (countByType('tower_cannon') < 3) {
         tryPlace(cannon, adjacentTiles);
       }
 
-      // Phase 4: Sniper on adjacent tile (up to 2 total)
-      if (countByType('tower_sniper') < 2) {
-        tryPlace(sniper, adjacentTiles);
+      // Phase 4: Sniper on any tile (up to 3 total) — long range works from non-adjacent
+      if (countByType('tower_sniper') < 3) {
+        tryPlace(sniper, tiles);
       }
 
       // Phase 5: Fill remaining adjacent tiles with Gatling T1
@@ -185,13 +185,14 @@ test('headless victory on Easy with automated tower placement', async ({ page })
         // keep placing until gold runs out or tiles are full
       }
 
-      // Phase 6: Upgrade all towers — prioritize damage, then utility, then economy
+      // Phase 6: Upgrade all towers — economy first (income compounds), then frost
+      // (slow multiplies all DPS), then damage towers
       const upgradeOrder = [
+        'tower_economy',
+        'tower_frost',
         'tower_gatling',
         'tower_cannon',
         'tower_sniper',
-        'tower_frost',
-        'tower_economy',
       ];
       for (const archId of upgradeOrder) {
         for (const tower of tm.getAllTowers()) {
