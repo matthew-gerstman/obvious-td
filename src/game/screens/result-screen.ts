@@ -1,4 +1,5 @@
 import type { Renderer } from '../../renderer/renderer';
+import type { ResultTheme } from '../../logic/types';
 
 export type ResultType = 'victory' | 'defeat';
 
@@ -41,10 +42,15 @@ const RETURN_BOUNDS: ButtonBounds = {
  * No HTML DOM — all rendering via the renderer's drawRect/drawText.
  */
 export class ResultScreen {
+  resultTheme: ResultTheme | null = null;
   private onReturn: (() => void) | null = null;
 
   constructor(onReturn: (() => void) | null = null) {
     this.onReturn = onReturn;
+  }
+
+  setTheme(resultTheme: ResultTheme | null): void {
+    this.resultTheme = resultTheme;
   }
 
   setOnReturn(onReturn: () => void): void {
@@ -69,10 +75,18 @@ export class ResultScreen {
   }
 
   render(renderer: Renderer, type: ResultType, stats: ResultStats): void {
-    renderer.drawRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT, BG_COLOR);
+    const t = this.resultTheme;
+    const bgColor = t?.bgColor ?? BG_COLOR;
+    const victoryText = t?.victoryText ?? 'Heaven is Safe!';
+    const defeatText = t?.defeatText ?? 'Demons Broke Through';
+    const victoryColor = t?.victoryColor ?? VICTORY_COLOR;
+    const defeatColor = t?.defeatColor ?? DEFEAT_COLOR;
+    const returnText = t?.returnText ?? 'Return to Title';
 
-    const title = type === 'victory' ? 'Heaven is Safe!' : 'Demons Broke Through';
-    const titleColor = type === 'victory' ? VICTORY_COLOR : DEFEAT_COLOR;
+    renderer.drawRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT, bgColor);
+
+    const title = type === 'victory' ? victoryText : defeatText;
+    const titleColor = type === 'victory' ? victoryColor : defeatColor;
 
     renderer.drawText(title, CANVAS_WIDTH / 2, 120, {
       color: titleColor,
@@ -104,7 +118,7 @@ export class ResultScreen {
     );
     this.drawBorder(renderer, RETURN_BOUNDS, BUTTON_BORDER);
     renderer.drawText(
-      'Return to Title',
+      returnText,
       RETURN_BOUNDS.x + RETURN_BOUNDS.w / 2,
       RETURN_BOUNDS.y + 30,
       { color: BUTTON_TEXT, font: 'bold 14px sans-serif', align: 'center' },

@@ -1,3 +1,64 @@
+// ── Theme types ─────────────────────────────────────────────────
+
+export interface TitleTheme {
+  title: string;
+  subtitle: string;
+  bgColor: string;
+  titleColor: string;
+  buttonBg: string;
+  buttonBgSelected: string;
+  buttonBorder: string;
+  buttonBorderSelected: string;
+}
+
+export interface HUDTheme {
+  currencyLabel: string;
+  livesLabel: string;
+  currencyColor: string;
+  livesColor: string;
+  waveColor: string;
+  bgColor: string;
+  buttonBg: string;
+  buttonBorder: string;
+}
+
+export interface ResultTheme {
+  victoryText: string;
+  defeatText: string;
+  victoryColor: string;
+  defeatColor: string;
+  bgColor: string;
+  returnText: string;
+}
+
+export interface TowerUITheme {
+  panelBg: string;
+  panelBorder: string;
+  towerColors: Record<string, string>;
+}
+
+export interface PathTileTheme {
+  spriteDir: string;
+}
+
+export interface ThemeData {
+  theme: string;
+  overrides: Record<string, Record<string, string>>;
+  ui?: {
+    title?: TitleTheme;
+    hud?: HUDTheme;
+    result?: ResultTheme;
+    towerUI?: TowerUITheme;
+    pathTiles?: PathTileTheme;
+  };
+}
+
+export interface ThemeOption {
+  id: string;
+  name: string;
+}
+
+
 // Shared types for the pure game-logic core.
 // All types mirror the JSON data schemas in schemas/ and data files in data/.
 

@@ -63,6 +63,12 @@ describe('Schema validation — all data files validate clean', () => {
     expect(validate(data)).toBe(true);
   });
 
+  it('dragon-ball theme file validates against theme schema', () => {
+    const validate = compileSchema('theme');
+    const data = loadJson(join(DATA_THEMES_DIR, 'dragon-ball.json'));
+    expect(validate(data)).toBe(true);
+  });
+
   it('wave table validates against wave table schema', () => {
     const validate = compileSchema('wave_table');
     const data = loadJson(join(DATA_WAVES_DIR, 'wave_table.json'));

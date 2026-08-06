@@ -323,7 +323,7 @@ test('strategy hints show correct enemy types for wave 1', async ({ page }) => {
   expect(hints).not.toBeNull();
   expect(hints!.hints).toHaveLength(1);
   expect(hints!.hints[0].enemyId).toBe('enemy_grunt');
-  expect(hints!.hints[0].enemyName).toBe('Grunt');
+  expect(hints!.hints[0].enemyName).toBe('Demon Soldier');
 });
 
 test('strategy hints show multiple enemy types for mixed waves', async ({ page }) => {

@@ -7,13 +7,14 @@ import { loadMap, type GameMap } from '../maps/map-loader';
 import { renderMap } from '../maps/map-renderer';
 import { TowerManager } from '../towers/tower-manager';
 import { TowerUI, TOWER_COLORS } from '../towers/tower-ui';
+import { ThemeManager } from './theme-manager';
 import { EconomyManager } from '../economy/economy-manager';
 import { WaveRunner } from '../waves/wave-runner';
 import { BossTelegraph } from '../waves/boss-telegraph';
 import { CombatManager } from '../combat/combat-manager';
 import { ProjectileManager } from '../combat/projectile';
 import { MuzzleFlashManager } from '../combat/muzzle-flash';
-import type { TowerData, DifficultyMode, EnemyData, WaveTable } from '../logic/types';
+import type { TowerData, DifficultyMode, EnemyData, WaveTable, ThemeData, ThemeOption } from '../logic/types';
 import { GameStateMachine, type GameState, type DifficultyKey } from './game-state';
 import { TitleScreen } from './screens/title-screen';
 import { ResultScreen, type ResultStats } from './screens/result-screen';
@@ -36,6 +37,11 @@ const AUTO_START_DELAY = 10; // seconds
 const TOWER_FILES = ['gatling', 'cannon', 'frost', 'poison', 'sniper', 'aura', 'economy'];
 const ENEMY_FILES = ['grunt', 'runner', 'armored', 'flyer', 'swarm', 'boss'];
 const MAP_FILES = ['map_single_path', 'map_multi_path', 'map_branching'];
+
+const AVAILABLE_THEMES: ThemeOption[] = [
+  { id: 'demons-heaven', name: 'Demons Into Heaven' },
+  { id: 'dragon-ball', name: 'Dragon Ball Z' },
+];
 
 interface DifficultyConfigData {
   modes: { easy: DifficultyMode; medium: DifficultyMode; hard: DifficultyMode };
@@ -75,6 +81,12 @@ export class Game {
   private muzzleFlashManager: MuzzleFlashManager | null = null;
   private spriteCache: SpriteCache = new SpriteCache();
   private damageNumberManager: DamageNumberManager = new DamageNumberManager();
+  private themeManager = new ThemeManager();
+  private themeData: ThemeData | null = null;
+  private currentThemeId = 'demons-heaven';
+  private rawTowerArchetypes: TowerData[] = [];
+  private rawEnemyArchetypes: Record<string, EnemyData> = {};
+  private currentTowerColors: Record<string, string> = {};
 
   // Runtime state
   private currentDifficulty: DifficultyMode | null = null;
@@ -117,6 +129,7 @@ export class Game {
     this.hud.setOnTogglePause(() => this.togglePause());
     this.hud.setOnToggleAutoStart(() => this.toggleAutoStart());
     this.resultScreen.setOnReturn(() => this.returnToTitle());
+    this.titleScreen.setOnThemeSelect((themeId) => this.handleThemeSelect(themeId));
 
     // Input — tile taps routed by state
     this.inputManager = new InputManager(canvas, TILE_SIZE, {
@@ -192,6 +205,7 @@ export class Game {
       this.gameMap.width,
       this.spriteCache,
     );
+    this.towerUI.setTheme(this.themeData?.ui?.towerUI ?? null);
 
     this.waveRunner = new WaveRunner();
     this.projectileManager = new ProjectileManager();
@@ -442,10 +456,12 @@ export class Game {
   private renderGame(): void {
     if (!this.gameMap) return;
 
+    const pathTileDir = this.themeData?.ui?.pathTiles?.spriteDir;
     renderMap(this.renderer, this.gameMap, {
       showBuildable: true,
       tileSize: TILE_SIZE,
       spriteCache: this.spriteCache,
+      ...(pathTileDir ? { pathTileDir } : {}),
     });
 
     // Towers — sprite with tier-based scale and brightness, fallback to drawRect
@@ -474,7 +490,7 @@ export class Game {
           );
           this.renderer.restore();
         } else {
-          const color = TOWER_COLORS[tower.archetype.archetype] ?? '#888';
+          const color = this.currentTowerColors[tower.archetype.archetype] ?? TOWER_COLORS[tower.archetype.archetype] ?? '#888';
           const inset = 4;
           this.renderer.drawRect(
             tower.tileX * TILE_SIZE + inset,
@@ -737,20 +753,20 @@ export class Game {
 
   private async init(): Promise<void> {
     try {
-      // Tower archetypes
-      this.towerArchetypes = await Promise.all(
+      // Tower archetypes (raw, unthemed — overrides applied after theme load)
+      this.rawTowerArchetypes = await Promise.all(
         TOWER_FILES.map(async (name) => {
           const res = await fetch(`/data/archetypes/tower_${name}.json`);
           return (await res.json()) as TowerData;
         }),
       );
 
-      // Enemy archetypes
+      // Enemy archetypes (raw, unthemed)
       await Promise.all(
         ENEMY_FILES.map(async (name) => {
           const res = await fetch(`/data/archetypes/enemy_${name}.json`);
           const data = (await res.json()) as EnemyData;
-          this.enemyArchetypes[data.id] = data;
+          this.rawEnemyArchetypes[data.id] = data;
         }),
       );
 
@@ -771,20 +787,10 @@ export class Game {
         }),
       );
 
-      // Preload sprites from archetype data and path tiles
-      const spritePaths = new Set<string>();
-      for (const tower of this.towerArchetypes) {
-        if (tower.presentation?.sprite) spritePaths.add(tower.presentation.sprite);
-        if (tower.presentation?.projectileSprite) spritePaths.add(tower.presentation.projectileSprite);
-      }
-      for (const enemyId in this.enemyArchetypes) {
-        const enemy = this.enemyArchetypes[enemyId];
-        if (enemy.presentation?.sprite) spritePaths.add(enemy.presentation.sprite);
-      }
-      for (const key of ['h', 'v', 'corner_ne', 'corner_nw', 'corner_se', 'corner_sw']) {
-        spritePaths.add(`sprites/default/path_tile_${key}.png`);
-      }
-      await this.spriteCache.preload([...spritePaths]);
+      // Load theme and apply overrides to archetype presentation
+      this.currentThemeId = this.themeManager.loadSavedTheme();
+      this.themeData = await this.themeManager.loadTheme(this.currentThemeId);
+      await this.applyThemeData();
 
       // Create default systems for backward compatibility with existing tests
       this.createDefaultSystems();
@@ -795,6 +801,45 @@ export class Game {
       // Data loading failed — game stays on title screen
       // which renders without requiring loaded data
     }
+  }
+
+  /** Apply theme overrides to archetype data, screens, and sprite cache. */
+  private async applyThemeData(): Promise<void> {
+    this.towerArchetypes = this.themeManager.applyOverrides(this.rawTowerArchetypes, this.themeData);
+
+    const themedEnemies = this.themeManager.applyOverrides(
+      Object.values(this.rawEnemyArchetypes),
+      this.themeData,
+    );
+    this.enemyArchetypes = {};
+    for (const enemy of themedEnemies) {
+      this.enemyArchetypes[enemy.id] = enemy;
+    }
+
+    this.currentTowerColors = this.themeData?.ui?.towerUI?.towerColors ?? {};
+
+    this.titleScreen.setThemeData(this.themeData, AVAILABLE_THEMES);
+    this.titleScreen.selectedTheme = this.currentThemeId;
+    this.hud.setTheme(this.themeData?.ui?.hud ?? null);
+    this.resultScreen.setTheme(this.themeData?.ui?.result ?? null);
+    if (this.towerUI) {
+      this.towerUI.setTheme(this.themeData?.ui?.towerUI ?? null);
+    }
+
+    const spritePaths = this.themeManager.resolveSpritePaths(
+      this.towerArchetypes,
+      this.enemyArchetypes,
+      this.themeData,
+    );
+    await this.spriteCache.preload(spritePaths);
+  }
+
+  /** Handle theme selector click — save, reload, and apply new theme. */
+  private async handleThemeSelect(themeId: string): Promise<void> {
+    this.themeManager.saveTheme(themeId);
+    this.currentThemeId = themeId;
+    this.themeData = await this.themeManager.loadTheme(themeId);
+    await this.applyThemeData();
   }
 
   private createDefaultSystems(): void {
@@ -817,6 +862,7 @@ export class Game {
       this.gameMap.width,
       this.spriteCache,
     );
+    this.towerUI.setTheme(this.themeData?.ui?.towerUI ?? null);
 
     this.waveRunner = new WaveRunner();
     this.projectileManager = new ProjectileManager();
@@ -858,6 +904,10 @@ export class Game {
     w.__difficulty = this.currentDifficulty;
     w.__spriteCache = this.spriteCache;
     w.__damageNumberManager = this.damageNumberManager;
+    w.__themeData = this.themeData;
+    w.__currentThemeId = this.currentThemeId;
+    w.__availableThemes = AVAILABLE_THEMES;
+    w.__switchTheme = (themeId: string) => this.handleThemeSelect(themeId);
   }
 }
 
