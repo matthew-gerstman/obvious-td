@@ -238,6 +238,25 @@ test('build panel shows sprite icons with pixel diversity', async ({ page }) => 
   );
 
   // Panel is at (96, 160). First row icon at (102, 200), size 20x20.
+  // Wait for the sprite to appear — in CI the render loop may not have
+  // drawn sprites on the first frame after the panel opens.
+  await page.waitForFunction(
+    () => {
+      const canvas = document.getElementById('game') as HTMLCanvasElement;
+      const ctx = canvas.getContext('2d')!;
+      const dpr = window.devicePixelRatio || 1;
+      // Check center of icon area for a non-background pixel
+      const data = ctx.getImageData(
+        Math.floor(112 * dpr),
+        Math.floor(210 * dpr),
+        1, 1,
+      ).data;
+      // Panel background is dark (~RGB 17,18,31). Sprite pixels are brighter.
+      return data[0] + data[1] + data[2] > 80;
+    },
+    { timeout: 5000 },
+  );
+
   // Sprites produce multiple distinct colors; a flat drawRect would produce 1-2.
   const diversity = await page.evaluate(() => {
     const canvas = document.getElementById('game') as HTMLCanvasElement;
@@ -299,6 +318,23 @@ test('build panel dims unaffordable tower icons', async ({ page }) => {
 
   await page.waitForFunction(
     () => (window as unknown as { __towerUI: { panelMode: string } }).__towerUI.panelMode === 'build',
+    { timeout: 5000 },
+  );
+
+  // Wait for sprites to render — in CI the render loop may lag behind panel state.
+  await page.waitForFunction(
+    () => {
+      const canvas = document.getElementById('game') as HTMLCanvasElement;
+      const ctx = canvas.getContext('2d')!;
+      const dpr = window.devicePixelRatio || 1;
+      // Check gatling icon center for a non-background pixel
+      const data = ctx.getImageData(
+        Math.floor(176 * dpr),
+        Math.floor(210 * dpr),
+        1, 1,
+      ).data;
+      return data[0] + data[1] + data[2] > 80;
+    },
     { timeout: 5000 },
   );
 
