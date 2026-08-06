@@ -139,8 +139,17 @@ export class WaveRunner {
       }
     }
 
-    // Remove dead/leaked enemies from the active roster
-    this.enemies = this.enemies.filter((e) => e.status === 'alive');
+    // Advance death fade-out for dead enemies still visually present
+    for (const enemy of this.enemies) {
+      if (enemy.status === 'dead' && enemy.fadeTimer > 0) {
+        enemy.updateFade(dt);
+      }
+    }
+
+    // Remove leaked enemies and dead enemies whose fade has completed
+    this.enemies = this.enemies.filter(
+      (e) => e.status === 'alive' || (e.status === 'dead' && e.fadeTimer > 0),
+    );
 
     // State transitions
     if (this.spawnQueue.length === 0) {
@@ -151,6 +160,11 @@ export class WaveRunner {
   /** All enemies currently alive on the map. */
   getAliveEnemies(): Enemy[] {
     return this.enemies.filter((e) => e.status === 'alive');
+  }
+
+  /** Dead enemies still fading out visually (for rendering only). */
+  getFadingEnemies(): Enemy[] {
+    return this.enemies.filter((e) => e.status === 'dead' && e.fadeTimer > 0);
   }
 
   /** True when the spawn queue is exhausted and no alive enemies remain. */
