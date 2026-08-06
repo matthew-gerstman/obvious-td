@@ -136,6 +136,23 @@ export class Renderer {
     this.ctx.restore();
   }
 
+  /** Draw a stroked circle (outline only, no fill). */
+  drawStrokeCircle(
+    x: number,
+    y: number,
+    radius: number,
+    color: string,
+    lineWidth: number = 1,
+  ): void {
+    this.ctx.save();
+    this.ctx.strokeStyle = color;
+    this.ctx.lineWidth = lineWidth;
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+    this.ctx.stroke();
+    this.ctx.restore();
+  }
+
   /** Draw a stroked rectangle (outline only, no fill). */
   drawStrokeRect(
     x: number,

@@ -12,6 +12,7 @@ import { WaveRunner } from '../waves/wave-runner';
 import { BossTelegraph } from '../waves/boss-telegraph';
 import { CombatManager } from '../combat/combat-manager';
 import { ProjectileManager } from '../combat/projectile';
+import { MuzzleFlashManager } from '../combat/muzzle-flash';
 import type { TowerData, DifficultyMode, EnemyData, WaveTable } from '../logic/types';
 import { GameStateMachine, type GameState, type DifficultyKey } from './game-state';
 import { TitleScreen } from './screens/title-screen';
@@ -65,6 +66,7 @@ export class Game {
   private waveRunner: WaveRunner | null = null;
   private combatManager: CombatManager | null = null;
   private projectileManager: ProjectileManager | null = null;
+  private muzzleFlashManager: MuzzleFlashManager | null = null;
   private spriteCache: SpriteCache = new SpriteCache();
   private damageNumberManager: DamageNumberManager = new DamageNumberManager();
 
@@ -115,7 +117,10 @@ export class Game {
         this.inputState.lastTap = tile;
         this.handleTileTap(tile);
       },
-      onTileHover: (tile) => { this.inputState.lastHover = tile; },
+      onTileHover: (tile) => {
+        this.inputState.lastHover = tile;
+        this.towerUI?.setHoverTile(tile);
+      },
       onTileDragStart: (tile) => { this.inputState.lastDragStart = tile; },
       onTileDragMove: (tile) => { this.inputState.lastDragMove = tile; },
       onTileDragEnd: (tile) => { this.inputState.lastDragEnd = tile; },
@@ -178,11 +183,17 @@ export class Game {
       this.towerArchetypes,
       TILE_SIZE,
       this.gameMap.width,
+      this.spriteCache,
     );
 
     this.waveRunner = new WaveRunner();
     this.projectileManager = new ProjectileManager();
-    this.combatManager = new CombatManager(this.economyManager, this.projectileManager);
+    this.muzzleFlashManager = new MuzzleFlashManager();
+    this.combatManager = new CombatManager(
+      this.economyManager,
+      this.projectileManager,
+      this.muzzleFlashManager,
+    );
 
     this.currentWave = 0;
     this.speedMultiplier = 1;
@@ -382,6 +393,9 @@ export class Game {
     // Update floating damage numbers
     this.damageNumberManager.update(dt);
 
+    // Muzzle flash timers advance with combat
+    this.muzzleFlashManager?.update(dt);
+
     // Count newly killed enemies for defeat-screen stats
     for (const enemy of aliveEnemies) {
       if (enemy.status === 'dead') {
@@ -538,6 +552,11 @@ export class Game {
     // Projectiles — sprite with fallback to drawRect
     if (this.projectileManager) {
       this.projectileManager.render(this.renderer, TILE_SIZE, this.spriteCache);
+    }
+
+    // Muzzle flashes — firing animation
+    if (this.muzzleFlashManager) {
+      this.muzzleFlashManager.render(this.renderer, TILE_SIZE);
     }
 
     // Tower UI panels
@@ -745,11 +764,17 @@ export class Game {
       this.towerArchetypes,
       TILE_SIZE,
       this.gameMap.width,
+      this.spriteCache,
     );
 
     this.waveRunner = new WaveRunner();
     this.projectileManager = new ProjectileManager();
-    this.combatManager = new CombatManager(this.economyManager, this.projectileManager);
+    this.muzzleFlashManager = new MuzzleFlashManager();
+    this.combatManager = new CombatManager(
+      this.economyManager,
+      this.projectileManager,
+      this.muzzleFlashManager,
+    );
   }
 
   // ── Test hook exposure ──────────────────────────────────────────
@@ -775,6 +800,7 @@ export class Game {
     w.__waveRunner = this.waveRunner;
     w.__combatManager = this.combatManager;
     w.__projectileManager = this.projectileManager;
+    w.__muzzleFlashManager = this.muzzleFlashManager;
     w.__enemyArchetypes = this.enemyArchetypes;
     w.__towerArchetypes = this.towerArchetypes;
     w.__waveTable = this.waveTable;

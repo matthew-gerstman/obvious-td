@@ -147,6 +147,38 @@ describe('Renderer.drawCircle', () => {
   });
 });
 
+// ── drawStrokeCircle ──────────────────────────────────────────────
+
+describe('Renderer.drawStrokeCircle', () => {
+  test('calls arc with center, radius, and full circle angles', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const renderer = new Renderer(canvas, { tileSize: 32, mapWidth: 20, mapHeight: 15 });
+    renderer.drawStrokeCircle(50, 60, 20, '#00ffff', 2);
+    expect(ctx.beginPath).toHaveBeenCalled();
+    expect(ctx.arc).toHaveBeenCalledWith(50, 60, 20, 0, Math.PI * 2);
+    expect(ctx.stroke).toHaveBeenCalled();
+    expect(ctx._captured.strokeStyle).toBe('#00ffff');
+    expect(ctx._captured.lineWidth).toBe(2);
+    renderer.destroy();
+  });
+
+  test('defaults lineWidth to 1 when omitted', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const renderer = new Renderer(canvas, { tileSize: 32, mapWidth: 20, mapHeight: 15 });
+    renderer.drawStrokeCircle(0, 0, 10, '#fff');
+    expect(ctx._captured.lineWidth).toBe(1);
+    renderer.destroy();
+  });
+
+  test('does not call fill', () => {
+    const { canvas, ctx } = createMockCanvas();
+    const renderer = new Renderer(canvas, { tileSize: 32, mapWidth: 20, mapHeight: 15 });
+    renderer.drawStrokeCircle(0, 0, 10, '#fff');
+    expect(ctx.fill).not.toHaveBeenCalled();
+    renderer.destroy();
+  });
+});
+
 // ── drawStrokeRect ───────────────────────────────────────────────
 
 describe('Renderer.drawStrokeRect', () => {
