@@ -71,6 +71,8 @@ export class Game {
   private speedMultiplier = 1;
   private prepTimer = 0;
   private totalEnemiesKilled = 0;
+  private paused = false;
+  private autoStartEnabled = true;
 
   // Input state for E2E test hooks
   private inputState = {
@@ -100,6 +102,8 @@ export class Game {
     this.titleScreen.setOnStart(() => this.handleStartClick());
     this.hud.setOnStartWave(() => this.startWave());
     this.hud.setOnToggleSpeed(() => this.toggleSpeed());
+    this.hud.setOnTogglePause(() => this.togglePause());
+    this.hud.setOnToggleAutoStart(() => this.toggleAutoStart());
     this.resultScreen.setOnReturn(() => this.returnToTitle());
 
     // Input — tile taps routed by state
@@ -181,6 +185,8 @@ export class Game {
     this.speedMultiplier = 1;
     this.prepTimer = 0;
     this.totalEnemiesKilled = 0;
+    this.paused = false;
+    this.autoStartEnabled = true;
     this.gameLoop.setSpeed(1);
 
     this.bossTelegraph = new BossTelegraph();
@@ -228,13 +234,45 @@ export class Game {
     this.titleScreen.selectedMapId = null;
     this.prepTimer = 0;
     this.speedMultiplier = 1;
+    this.paused = false;
+    this.autoStartEnabled = true;
     this.gameLoop.setSpeed(1);
   }
 
   /** Toggles between 1x and 2x speed. */
   toggleSpeed(): void {
+    if (this.paused) return;
     this.speedMultiplier = this.speedMultiplier === 1 ? 2 : 1;
     this.gameLoop.setSpeed(this.speedMultiplier);
+  }
+
+  /** Toggles pause on/off. */
+  togglePause(): void {
+    this.paused = !this.paused;
+  }
+
+  /** Returns true if the game is paused. */
+  isPaused(): boolean {
+    return this.paused;
+  }
+
+  /** Toggles auto-start on/off. */
+  toggleAutoStart(): void {
+    this.autoStartEnabled = !this.autoStartEnabled;
+    // Reset prep timer so a turning-off-then-on doesn't fire immediately
+    if (!this.autoStartEnabled) {
+      this.prepTimer = 0;
+    }
+  }
+
+  /** Returns true if auto-start is enabled. */
+  isAutoStartEnabled(): boolean {
+    return this.autoStartEnabled;
+  }
+
+  /** Returns the current prep timer value (seconds elapsed in WAVE_PREP). */
+  getPrepTimer(): number {
+    return this.prepTimer;
   }
 
   /** Clean up event listeners. */
@@ -250,6 +288,7 @@ export class Game {
     const state = this.stateMachine.getState();
 
     if (state === 'TITLE' || state === 'VICTORY' || state === 'DEFEAT') return;
+    if (this.paused) return;
 
     if (state === 'WAVE_PREP') {
       this.updateWavePrep(dt);
@@ -284,9 +323,13 @@ export class Game {
       );
     }
 
-    this.prepTimer += dt;
-    if (this.prepTimer >= AUTO_START_DELAY && this.currentWave < TOTAL_WAVES) {
-      this.startWave();
+    // Auto-start countdown only for waves 2+ when auto-start is enabled.
+    // Wave 1 (currentWave === 0) always requires manual Start Wave.
+    if (this.autoStartEnabled && this.currentWave >= 1) {
+      this.prepTimer += dt;
+      if (this.prepTimer >= AUTO_START_DELAY && this.currentWave < TOTAL_WAVES) {
+        this.startWave();
+      }
     }
   }
 
@@ -476,14 +519,67 @@ export class Game {
 
   private getHUDContext(): HUDContext {
     const state = this.stateMachine.getState();
+    const inPrep = state === 'WAVE_PREP';
+    const inActive = state === 'WAVE_ACTIVE';
+    const preview = inPrep ? this.buildWavePreview() : null;
+
+    // Countdown only shows for waves 2+ when auto-start is enabled
+    const showCountdown = inPrep && this.autoStartEnabled && this.currentWave >= 1;
+    const countdown = showCountdown
+      ? Math.max(0, AUTO_START_DELAY - this.prepTimer)
+      : null;
+
     return {
       gold: this.economyManager?.getGold() ?? 0,
       lives: this.economyManager?.getLives() ?? 0,
       waveNumber: this.currentWave,
       totalWaves: TOTAL_WAVES,
-      showStartWave: state === 'WAVE_PREP',
+      showStartWave: inPrep,
       speedMultiplier: this.speedMultiplier,
       bossBannerText: this.getBossBannerText(),
+      wavePreviewText: preview?.text ?? null,
+      wavePreviewHasBoss: preview?.hasBoss ?? false,
+      autoStartCountdown: countdown,
+      autoStartEnabled: this.autoStartEnabled,
+      showAutoStartToggle: inPrep,
+      paused: this.paused,
+      showPauseButton: inPrep || inActive,
+    };
+  }
+
+  /**
+   * Builds a human-readable preview of the next wave's composition.
+   * Returns null if wave data isn't loaded or the next wave doesn't exist.
+   */
+  private buildWavePreview(): { text: string; hasBoss: boolean } | null {
+    if (!this.waveTable || !this.enemyArchetypes) return null;
+    const nextWave = this.currentWave + 1;
+    const waveEntry = this.waveTable.waves.find((w) => w.wave === nextWave);
+    if (!waveEntry) return null;
+
+    const parts: string[] = [];
+    let hasBoss = false;
+
+    for (const entry of waveEntry.enemies) {
+      const enemyData = this.enemyArchetypes[entry.enemyId];
+      if (!enemyData) continue;
+
+      const name = enemyData.presentation?.name ?? entry.enemyId;
+      const count = entry.count;
+      const isBoss = enemyData.logic.isBoss;
+      if (isBoss) hasBoss = true;
+
+      // Pluralize: add 's' for count > 1, but skip for boss and names ending in 'ed'
+      const plural = count > 1 && !isBoss && !name.endsWith('ed')
+        ? `${name}s`
+        : name;
+      parts.push(`${count} ${plural}`);
+    }
+
+    if (parts.length === 0) return null;
+    return {
+      text: `Next Wave ${nextWave}: ${parts.join(', ')}`,
+      hasBoss,
     };
   }
 
