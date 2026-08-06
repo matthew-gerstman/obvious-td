@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-const DATA_ARCHETYPES_DIR = 'data/archetypes';
-const DATA_MAPS_DIR = 'data/maps';
-const DATA_WAVES_DIR = 'data/waves';
+const DATA_ARCHETYPES_DIR = 'public/data/archetypes';
+const DATA_MAPS_DIR = 'public/data/maps';
+const DATA_WAVES_DIR = 'public/data/waves';
 
 function loadJson(filePath: string): unknown {
   return JSON.parse(readFileSync(filePath, 'utf-8'));

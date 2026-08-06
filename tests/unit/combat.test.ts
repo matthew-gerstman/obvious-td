@@ -24,7 +24,7 @@ function makeDifficulty(overrides: Partial<DifficultyMode> = {}): DifficultyMode
 const diff = makeDifficulty();
 
 function loadEnemyData(id: string): EnemyData {
-  return JSON.parse(readFileSync(`data/archetypes/${id}.json`, 'utf-8')) as EnemyData;
+  return JSON.parse(readFileSync(`public/data/archetypes/${id}.json`, 'utf-8')) as EnemyData;
 }
 
 function makeEnemy(archetypeId: string, x = 0, y = 0): Enemy {

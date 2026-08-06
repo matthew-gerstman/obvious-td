@@ -4,10 +4,10 @@ import { join } from 'node:path';
 import Ajv from 'ajv';
 
 const SCHEMAS_DIR = 'schemas';
-const DATA_ARCHETYPES_DIR = 'data/archetypes';
-const DATA_MAPS_DIR = 'data/maps';
-const DATA_THEMES_DIR = 'data/themes';
-const DATA_WAVES_DIR = 'data/waves';
+const DATA_ARCHETYPES_DIR = 'public/data/archetypes';
+const DATA_MAPS_DIR = 'public/data/maps';
+const DATA_THEMES_DIR = 'public/data/themes';
+const DATA_WAVES_DIR = 'public/data/waves';
 const FIXTURES_DIR = 'tests/fixtures';
 
 const ajv = new Ajv({ allErrors: true, strict: true });
@@ -71,7 +71,7 @@ describe('Schema validation — all data files validate clean', () => {
 
   it('difficulty config validates against difficulty schema', () => {
     const validate = compileSchema('difficulty');
-    const data = loadJson('data/difficulty.json');
+    const data = loadJson('public/data/difficulty.json');
     expect(validate(data)).toBe(true);
   });
 });

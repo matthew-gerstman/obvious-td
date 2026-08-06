@@ -14,7 +14,7 @@ function loadJson(filePath: string): unknown {
 }
 
 function loadFullEnemyData(): Record<string, EnemyData> {
-  const dir = 'data/archetypes';
+  const dir = 'public/data/archetypes';
   const files = readdirSync(dir).filter(
     (f) => f.startsWith('enemy_') && f.endsWith('.json'),
   );
@@ -27,7 +27,7 @@ function loadFullEnemyData(): Record<string, EnemyData> {
 }
 
 function loadGameMap(mapId: string) {
-  const data = loadJson(`data/maps/${mapId}.json`);
+  const data = loadJson(`public/data/maps/${mapId}.json`);
   return parseMap(data as object);
 }
 

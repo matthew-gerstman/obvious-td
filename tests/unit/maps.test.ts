@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { loadMap, GameMap } from '../../src/maps/map-loader';
 import { Path } from '../../src/maps/path';
 
-const DATA_MAPS_DIR = 'data/maps';
+const DATA_MAPS_DIR = 'public/data/maps';
 
 function loadJson(filePath: string): unknown {
   return JSON.parse(readFileSync(filePath, 'utf-8')) as unknown;
