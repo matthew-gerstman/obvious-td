@@ -1,4 +1,5 @@
 import { Renderer } from '../renderer/renderer';
+import { SpriteCache } from '../renderer/sprite-loader';
 import { GameLoop } from '../engine/game-loop';
 import { InputManager } from '../input/input-manager';
 import type { TilePoint } from '../input/coordinates';
@@ -62,6 +63,7 @@ export class Game {
   private waveRunner: WaveRunner | null = null;
   private combatManager: CombatManager | null = null;
   private projectileManager: ProjectileManager | null = null;
+  private spriteCache: SpriteCache = new SpriteCache();
 
   // Runtime state
   private currentDifficulty: DifficultyMode | null = null;
@@ -348,20 +350,47 @@ export class Game {
     renderMap(this.renderer, this.gameMap, {
       showBuildable: true,
       tileSize: TILE_SIZE,
+      spriteCache: this.spriteCache,
     });
 
-    // Towers
+    // Towers — sprite with tier-based scale and brightness, fallback to drawRect
     if (this.towerManager) {
+      const tierScale = [1.0, 1.15, 1.3];
+      const tierBrightness = ['none', 'brightness(1.15)', 'brightness(1.3)'];
+
       for (const tower of this.towerManager.getAllTowers()) {
-        const color = TOWER_COLORS[tower.archetype.archetype] ?? '#888';
-        const inset = 4;
-        this.renderer.drawRect(
-          tower.tileX * TILE_SIZE + inset,
-          tower.tileY * TILE_SIZE + inset,
-          TILE_SIZE - inset * 2,
-          TILE_SIZE - inset * 2,
-          color,
-        );
+        const spritePath = tower.archetype.presentation?.sprite;
+        const sprite = spritePath ? this.spriteCache.get(spritePath) : null;
+
+        if (sprite) {
+          const scale = tierScale[tower.tier - 1] ?? 1.0;
+          const brightness = tierBrightness[tower.tier - 1] ?? 'none';
+          const size = TILE_SIZE * scale;
+          const offset = (TILE_SIZE - size) / 2;
+
+          this.renderer.save();
+          if (brightness !== 'none') this.renderer.setFilter(brightness);
+          this.renderer.drawSprite(
+            sprite,
+            tower.tileX * TILE_SIZE + offset,
+            tower.tileY * TILE_SIZE + offset,
+            size,
+            size,
+          );
+          this.renderer.restore();
+        } else {
+          const color = TOWER_COLORS[tower.archetype.archetype] ?? '#888';
+          const inset = 4;
+          this.renderer.drawRect(
+            tower.tileX * TILE_SIZE + inset,
+            tower.tileY * TILE_SIZE + inset,
+            TILE_SIZE - inset * 2,
+            TILE_SIZE - inset * 2,
+            color,
+          );
+        }
+
+        // Tier indicator dots (always drawn on top)
         for (let i = 0; i < tower.tier; i++) {
           this.renderer.drawRect(
             tower.tileX * TILE_SIZE + 6 + i * 8,
@@ -374,23 +403,37 @@ export class Game {
       }
     }
 
-    // Enemies
+    // Enemies — sprite with fallback to drawRect
     if (this.waveRunner) {
       for (const enemy of this.waveRunner.getAliveEnemies()) {
-        const color = enemy.flying ? '#ff6b6b' : '#e03939';
-        this.renderer.drawRect(
-          enemy.x * TILE_SIZE + 8,
-          enemy.y * TILE_SIZE + 8,
-          TILE_SIZE - 16,
-          TILE_SIZE - 16,
-          color,
-        );
+        const sprite = enemy.spritePath ? this.spriteCache.get(enemy.spritePath) : null;
+
+        if (sprite) {
+          const size = enemy.isBoss ? TILE_SIZE * 1.5 : TILE_SIZE - 4;
+          const offset = (TILE_SIZE - size) / 2;
+          this.renderer.drawSprite(
+            sprite,
+            enemy.x * TILE_SIZE + offset,
+            enemy.y * TILE_SIZE + offset,
+            size,
+            size,
+          );
+        } else {
+          const color = enemy.flying ? '#ff6b6b' : '#e03939';
+          this.renderer.drawRect(
+            enemy.x * TILE_SIZE + 8,
+            enemy.y * TILE_SIZE + 8,
+            TILE_SIZE - 16,
+            TILE_SIZE - 16,
+            color,
+          );
+        }
       }
     }
 
-    // Projectiles
+    // Projectiles — sprite with fallback to drawRect
     if (this.projectileManager) {
-      this.projectileManager.render(this.renderer, TILE_SIZE);
+      this.projectileManager.render(this.renderer, TILE_SIZE, this.spriteCache);
     }
 
     // Tower UI panels
@@ -501,6 +544,21 @@ export class Game {
         }),
       );
 
+      // Preload sprites from archetype data and path tiles
+      const spritePaths = new Set<string>();
+      for (const tower of this.towerArchetypes) {
+        if (tower.presentation?.sprite) spritePaths.add(tower.presentation.sprite);
+        if (tower.presentation?.projectileSprite) spritePaths.add(tower.presentation.projectileSprite);
+      }
+      for (const enemyId in this.enemyArchetypes) {
+        const enemy = this.enemyArchetypes[enemyId];
+        if (enemy.presentation?.sprite) spritePaths.add(enemy.presentation.sprite);
+      }
+      for (const key of ['h', 'v', 'corner_ne', 'corner_nw', 'corner_se', 'corner_sw']) {
+        spritePaths.add(`sprites/default/path_tile_${key}.png`);
+      }
+      await this.spriteCache.preload([...spritePaths]);
+
       // Create default systems for backward compatibility with existing tests
       this.createDefaultSystems();
 
@@ -564,6 +622,7 @@ export class Game {
     w.__towerArchetypes = this.towerArchetypes;
     w.__waveTable = this.waveTable;
     w.__difficulty = this.currentDifficulty;
+    w.__spriteCache = this.spriteCache;
   }
 }
 

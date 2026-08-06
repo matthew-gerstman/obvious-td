@@ -11,11 +11,18 @@ export interface EnemyLogic {
   isBoss: boolean;
 }
 
+export interface EnemyPresentation {
+  name: string;
+  description: string;
+  sprite: string;
+}
+
 export interface EnemyData {
   id: string;
   type: 'enemy';
   archetype: string;
   logic: EnemyLogic;
+  presentation?: EnemyPresentation;
 }
 
 export interface TowerTier {

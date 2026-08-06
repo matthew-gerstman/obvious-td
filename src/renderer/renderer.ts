@@ -196,6 +196,11 @@ export class Renderer {
     this.ctx.translate(x, y);
   }
 
+  /** Set canvas filter for visual effects (brightness, blur, etc.). */
+  setFilter(filter: string): void {
+    this.ctx.filter = filter;
+  }
+
   /** Remove event listeners. Call when the renderer is no longer needed. */
   destroy(): void {
     window.removeEventListener('resize', this.resizeListener);
