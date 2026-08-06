@@ -17,6 +17,8 @@ import { GameStateMachine, type GameState, type DifficultyKey } from './game-sta
 import { TitleScreen } from './screens/title-screen';
 import { ResultScreen, type ResultStats } from './screens/result-screen';
 import { HUD, type HUDContext } from './hud';
+import { DamageNumberManager } from './damage-numbers';
+import { drawHealthBar, drawStatusTint } from './enemy-visuals';
 
 const TILE_SIZE = 32;
 const MAP_WIDTH = 20;
@@ -64,6 +66,7 @@ export class Game {
   private combatManager: CombatManager | null = null;
   private projectileManager: ProjectileManager | null = null;
   private spriteCache: SpriteCache = new SpriteCache();
+  private damageNumberManager: DamageNumberManager = new DamageNumberManager();
 
   // Runtime state
   private currentDifficulty: DifficultyMode | null = null;
@@ -187,6 +190,7 @@ export class Game {
     this.totalEnemiesKilled = 0;
     this.paused = false;
     this.autoStartEnabled = true;
+    this.damageNumberManager.clear();
     this.gameLoop.setSpeed(1);
 
     this.bossTelegraph = new BossTelegraph();
@@ -358,7 +362,25 @@ export class Game {
 
     // Combat: towers fire, DoTs tick, slows expire, deaths processed
     const aliveEnemies = this.waveRunner.getAliveEnemies();
+
+    // Capture HP before combat to detect damage for floating numbers
+    const hpBefore = new Map<string, number>();
+    for (const enemy of aliveEnemies) {
+      hpBefore.set(enemy.id, enemy.hp);
+    }
+
     this.combatManager.update(dt, this.towerManager.getAllTowers(), aliveEnemies);
+
+    // Spawn floating damage numbers for enemies that lost HP
+    for (const enemy of aliveEnemies) {
+      const before = hpBefore.get(enemy.id);
+      if (before !== undefined && enemy.hp < before) {
+        this.damageNumberManager.spawn(enemy.x, enemy.y, before - enemy.hp);
+      }
+    }
+
+    // Update floating damage numbers
+    this.damageNumberManager.update(dt);
 
     // Count newly killed enemies for defeat-screen stats
     for (const enemy of aliveEnemies) {
@@ -446,7 +468,7 @@ export class Game {
       }
     }
 
-    // Enemies — sprite with fallback to drawRect
+    // Enemies — alive: sprite + status tint + health bar
     if (this.waveRunner) {
       for (const enemy of this.waveRunner.getAliveEnemies()) {
         const sprite = enemy.spritePath ? this.spriteCache.get(enemy.spritePath) : null;
@@ -471,7 +493,46 @@ export class Game {
             color,
           );
         }
+
+        // Status effect tint overlay (slow = blue, poison = green)
+        drawStatusTint(this.renderer, enemy, TILE_SIZE);
+
+        // Health bar above damaged enemies
+        drawHealthBar(this.renderer, enemy, TILE_SIZE);
       }
+
+      // Dead enemies — render with fade-out alpha
+      for (const enemy of this.waveRunner.getFadingEnemies()) {
+        this.renderer.save();
+        this.renderer.setAlpha(enemy.fadeAlpha);
+
+        const sprite = enemy.spritePath ? this.spriteCache.get(enemy.spritePath) : null;
+        if (sprite) {
+          const size = enemy.isBoss ? TILE_SIZE * 1.5 : TILE_SIZE - 4;
+          const offset = (TILE_SIZE - size) / 2;
+          this.renderer.drawSprite(
+            sprite,
+            enemy.x * TILE_SIZE + offset,
+            enemy.y * TILE_SIZE + offset,
+            size,
+            size,
+          );
+        } else {
+          const color = enemy.flying ? '#ff6b6b' : '#e03939';
+          this.renderer.drawRect(
+            enemy.x * TILE_SIZE + 8,
+            enemy.y * TILE_SIZE + 8,
+            TILE_SIZE - 16,
+            TILE_SIZE - 16,
+            color,
+          );
+        }
+
+        this.renderer.restore();
+      }
+
+      // Floating damage numbers
+      this.damageNumberManager.render(this.renderer, TILE_SIZE);
     }
 
     // Projectiles — sprite with fallback to drawRect
@@ -719,6 +780,7 @@ export class Game {
     w.__waveTable = this.waveTable;
     w.__difficulty = this.currentDifficulty;
     w.__spriteCache = this.spriteCache;
+    w.__damageNumberManager = this.damageNumberManager;
   }
 }
 

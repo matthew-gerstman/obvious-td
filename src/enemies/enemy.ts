@@ -34,6 +34,9 @@ export class Enemy implements RuntimeEnemy {
   activeSlowEffects: SlowEffect[];
   activeDoTEffects: DoTEffect[];
   rewardClaimed: boolean;
+  fadeAlpha: number;
+  fadeTimer: number;
+  fadeDuration: number;
 
   constructor(
     enemyData: EnemyData,
@@ -68,6 +71,9 @@ export class Enemy implements RuntimeEnemy {
     this.activeSlowEffects = [];
     this.activeDoTEffects = [];
     this.rewardClaimed = false;
+    this.fadeAlpha = 0;
+    this.fadeTimer = 0;
+    this.fadeDuration = 0.3; // 300ms death fade
   }
 
   /**
@@ -120,6 +126,8 @@ export class Enemy implements RuntimeEnemy {
     if (this.hp <= 0) {
       this.hp = 0;
       this.status = 'dead';
+      this.fadeAlpha = 1.0;
+      this.fadeTimer = this.fadeDuration;
     }
   }
 
@@ -132,6 +140,18 @@ export class Enemy implements RuntimeEnemy {
 
     this.activeSlowEffects.push({ factor, duration });
     this.currentSpeed = getEffectiveSpeed(this.speed, this.activeSlowEffects);
+  }
+
+  /**
+   * Advance the death fade-out animation. Decrements fadeTimer and
+   * updates fadeAlpha linearly from 1.0 to 0.0. Returns true when
+   * the fade is complete (enemy should be removed from rendering).
+   */
+  updateFade(dt: number): boolean {
+    if (this.fadeTimer <= 0) return true;
+    this.fadeTimer -= dt;
+    this.fadeAlpha = Math.max(0, this.fadeTimer / this.fadeDuration);
+    return this.fadeTimer <= 0;
   }
 
   /** Gold awarded when this enemy is killed. */
