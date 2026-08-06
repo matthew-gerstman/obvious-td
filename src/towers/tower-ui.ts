@@ -37,6 +37,11 @@ const INFO_LINE_HEIGHT = 22;
 const BUILD_PANEL_WIDTH = 260;
 const INFO_PANEL_WIDTH = 240;
 
+// Game area bounds — panels must stay within this vertical region
+// to avoid overlapping the HUD button row at the bottom of the canvas.
+const GAME_AREA_TOP = 32;
+const GAME_AREA_BOTTOM = 448;
+
 export type PanelMode = 'none' | 'build' | 'info';
 
 export interface TowerUIState {
@@ -180,6 +185,7 @@ export class TowerUI {
     this.panelHeight = TITLE_HEIGHT + PANEL_PADDING * 2 + this.archetypes.length * ROW_HEIGHT;
 
     this.clampPanelToRight(tile);
+    this.clampPanelToBottom();
 
     this.buildRows = [];
     let rowY = this.panelY + TITLE_HEIGHT + PANEL_PADDING;
@@ -210,6 +216,7 @@ export class TowerUI {
       PANEL_PADDING;
 
     this.clampPanelToRight(tile);
+    this.clampPanelToBottom();
 
     const buttonY =
       this.panelY +
@@ -236,6 +243,16 @@ export class TowerUI {
     if (this.panelX + this.panelWidth > this.mapWidthPx) {
       this.panelX = tile.x * this.tileSize - this.panelWidth;
       if (this.panelX < 0) this.panelX = 0;
+    }
+  }
+
+  /** If panel would overflow the bottom of the game area, shift it up. */
+  private clampPanelToBottom(): void {
+    if (this.panelY + this.panelHeight > GAME_AREA_BOTTOM) {
+      this.panelY = GAME_AREA_BOTTOM - this.panelHeight;
+    }
+    if (this.panelY < GAME_AREA_TOP) {
+      this.panelY = GAME_AREA_TOP;
     }
   }
 
