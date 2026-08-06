@@ -71,7 +71,7 @@ const START_BOUNDS: ButtonBounds = {
 };
 
 // Theme selector layout
-const THEME_Y = 78;
+const THEME_Y = 68;
 const THEME_BTN_W = 150;
 const THEME_BTN_H = 20;
 const THEME_BTN_GAP = 8;
@@ -205,16 +205,21 @@ export class TitleScreen {
 
     renderer.drawRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT, t.bgColor);
 
+    // Dynamic font size: long titles (e.g. DBZ "Don't Let the Villains Destroy Earth!")
+    // get a smaller font so they fit within the 640px canvas.
+    const titleLen = t.title.length;
+    const titleFont = titleLen > 32 ? 'bold 18px sans-serif' : 'bold 22px sans-serif';
+
     renderer.drawText(
       t.title,
       CANVAS_WIDTH / 2,
-      40,
-      { color: t.titleColor, font: 'bold 22px sans-serif', align: 'center' },
+      32,
+      { color: t.titleColor, font: titleFont, align: 'center' },
     );
     renderer.drawText(
       t.subtitle,
       CANVAS_WIDTH / 2,
-      65,
+      55,
       { color: SUBTITLE_COLOR, font: '14px sans-serif', align: 'center' },
     );
 

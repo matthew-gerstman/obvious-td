@@ -34,7 +34,7 @@ const TITLE_HEIGHT = 28;
 const BUTTON_HEIGHT = 32;
 const BUTTON_WIDTH = 90;
 const INFO_LINE_HEIGHT = 22;
-const BUILD_PANEL_WIDTH = 260;
+const BUILD_PANEL_WIDTH = 300;
 const INFO_PANEL_WIDTH = 240;
 
 // Game area bounds — panels must stay within this vertical region
@@ -550,9 +550,10 @@ export class TowerUI {
       const dps =
         tier1.damage > 0 && tier1.cooldown > 0 ? calculateDPS(tier1.damage, tier1.cooldown) : 0;
       const cpd = dps > 0 ? calculateCostPerDPS(tier1.cost, dps).toFixed(1) : 'N/A';
-      this.renderer.drawText(`${cpd} g/DPS`, this.panelX + this.panelWidth - 90, rowY + 20, {
+      this.renderer.drawText(`${cpd} g/DPS`, this.panelX + this.panelWidth - PANEL_PADDING, rowY + 20, {
         color: dps > 0 ? '#e8e8e8' : PANEL_TEXT_DIM,
         font: '11px sans-serif',
+        align: 'right',
       });
 
       rowY += ROW_HEIGHT;
