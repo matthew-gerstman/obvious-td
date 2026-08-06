@@ -183,16 +183,17 @@ test('drawStrokeRect renders border pixels but not interior', async ({ page }) =
     const canvas = document.getElementById('game') as HTMLCanvasElement;
     const renderer = new Renderer(canvas, { tileSize: 32, mapWidth: 20, mapHeight: 15 });
     renderer.clear();
-    // Stroked rect at (64, 0) size 32x32, lineWidth 2
-    renderer.drawStrokeRect(64, 0, 32, 32, '#ff6b6b', 2);
+    // Stroked rect at (64, 32) size 32x32, lineWidth 2 — offset from canvas edge
+    // so the full stroke width is within the canvas
+    renderer.drawStrokeRect(64, 32, 32, 32, '#ff6b6b', 2);
     const dpr = window.devicePixelRatio || 1;
-    // Border pixel at (65, 1) — inside the stroke
+    // Border pixel at (70, 32) — on the top-edge path (center of 2px stroke)
     const borderData = canvas.getContext('2d')!.getImageData(
-      Math.floor(65 * dpr), Math.floor(1 * dpr), 1, 1,
+      Math.floor(70 * dpr), Math.floor(32 * dpr), 1, 1,
     ).data;
-    // Interior pixel at (80, 16) — center of rect, should be transparent
+    // Interior pixel at (80, 48) — center of rect, should be transparent
     const interiorData = canvas.getContext('2d')!.getImageData(
-      Math.floor(80 * dpr), Math.floor(16 * dpr), 1, 1,
+      Math.floor(80 * dpr), Math.floor(48 * dpr), 1, 1,
     ).data;
     return {
       border: { r: borderData[0] ?? 0, g: borderData[1] ?? 0, b: borderData[2] ?? 0, a: borderData[3] ?? 0 },
