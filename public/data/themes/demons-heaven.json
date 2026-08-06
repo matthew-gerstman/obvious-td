@@ -1,0 +1,90 @@
+{
+  "theme": "demons-heaven",
+  "overrides": {
+    "tower_gatling": {
+      "name": "Heaven's Archer",
+      "description": "A celestial archer firing blessed arrows in rapid succession. Cheap and reliable, guarding the gates of heaven with relentless volleys.",
+      "sprite": "sprites/demons/gatling.png",
+      "projectileSprite": "sprites/demons/gatling_projectile.png"
+    },
+    "tower_cannon": {
+      "name": "Holy Mortar",
+      "description": "A divine mortar that launches explosive orbs of holy fire. Devastating at choke points where demons cluster.",
+      "sprite": "sprites/demons/cannon.png",
+      "projectileSprite": "sprites/demons/cannon_projectile.png"
+    },
+    "tower_frost": {
+      "name": "Frost Halo",
+      "description": "A radiant halo that chills demons with divine frost. Slows their advance, giving defenders time to regroup.",
+      "sprite": "sprites/demons/frost.png",
+      "projectileSprite": "sprites/demons/frost_projectile.png"
+    },
+    "tower_poison": {
+      "name": "Plague Prayer",
+      "description": "A cursed prayer that inflicts lingering divine plague upon demons. The corruption spreads, ignoring their armor.",
+      "sprite": "sprites/demons/poison.png",
+      "projectileSprite": "sprites/demons/poison_projectile.png"
+    },
+    "tower_sniper": {
+      "name": "Divine Lance",
+      "description": "A heavenly lance that pierces through the strongest demons from afar. Armor-piercing and far-reaching, it strikes both ground and air.",
+      "sprite": "sprites/demons/sniper.png",
+      "projectileSprite": "sprites/demons/sniper_projectile.png"
+    },
+    "tower_aura": {
+      "name": "Angel's Blessing",
+      "description": "An angelic presence that blesses nearby towers with divine power. Enhances damage, range, and fire rate of all towers in its aura.",
+      "sprite": "sprites/demons/aura.png"
+    },
+    "tower_economy": {
+      "name": "Alms Collector",
+      "description": "A celestial tithe collector that gathers offerings from the faithful. Generates a steady stream of gold for the defense of heaven.",
+      "sprite": "sprites/demons/economy.png"
+    },
+    "enemy_runner": {
+      "name": "Imp",
+      "description": "A small, fast demon that sprints toward the gates of heaven. Fragile but quick — don't let it slip through.",
+      "sprite": "sprites/demons/runner.png"
+    },
+    "enemy_grunt": {
+      "name": "Demon Soldier",
+      "description": "A rank-and-file demon soldier. Balanced threat that forms the core of every demonic assault.",
+      "sprite": "sprites/demons/grunt.png"
+    },
+    "enemy_armored": {
+      "name": "Armored Brute",
+      "description": "A hulking demon clad in infernal armor. Reduces incoming damage by half unless struck with armor-piercing weapons.",
+      "sprite": "sprites/demons/armored.png"
+    },
+    "enemy_flyer": {
+      "name": "Gargoyle",
+      "description": "A winged gargoyle that soars above ground defenses. Only towers blessed with anti-air can strike it from the sky.",
+      "sprite": "sprites/demons/flyer.png"
+    },
+    "enemy_swarm": {
+      "name": "Hellspawn",
+      "description": "A writhing mass of lesser demons that spawns in overwhelming numbers. Each individual is weak, but their horde can break through.",
+      "sprite": "sprites/demons/swarm.png"
+    },
+    "enemy_boss": {
+      "name": "Demon Lord",
+      "description": "A towering Demon Lord leading the assault on heaven. Massive HP, thick armor, and a bounty of gold for whoever fells it.",
+      "sprite": "sprites/demons/boss.png"
+    },
+    "map_single_path": {
+      "name": "The Golden Path",
+      "description": "A single winding road to the gates of heaven. Master your upgrade timing and tower composition on this deterministic path.",
+      "backgroundSprite": "sprites/demons/map_single_path_bg.png"
+    },
+    "map_multi_path": {
+      "name": "Twin Gates",
+      "description": "Two approaches converge on a single gate. Split your defenses wisely — both lanes demand attention simultaneously.",
+      "backgroundSprite": "sprites/demons/map_multi_path_bg.png"
+    },
+    "map_branching": {
+      "name": "The Forked Road",
+      "description": "One road forks and rejoins before the gate. Choose to funnel enemies at the merge or defend each branch independently.",
+      "backgroundSprite": "sprites/demons/map_branching_bg.png"
+    }
+  }
+}

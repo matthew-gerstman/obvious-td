@@ -1,0 +1,50 @@
+{
+  "id": "tower_economy",
+  "type": "tower",
+  "archetype": "economy",
+  "logic": {
+    "tiers": [
+      {
+        "tier": 1,
+        "cost": 75,
+        "damage": 0,
+        "cooldown": 0,
+        "range": 0,
+        "targeting": "none",
+        "hitsAir": false,
+        "armorPiercing": false,
+        "incomePerTick": 5,
+        "incomeInterval": 2
+      },
+      {
+        "tier": 2,
+        "cost": 130,
+        "damage": 0,
+        "cooldown": 0,
+        "range": 0,
+        "targeting": "none",
+        "hitsAir": false,
+        "armorPiercing": false,
+        "incomePerTick": 9,
+        "incomeInterval": 2
+      },
+      {
+        "tier": 3,
+        "cost": 200,
+        "damage": 0,
+        "cooldown": 0,
+        "range": 0,
+        "targeting": "none",
+        "hitsAir": false,
+        "armorPiercing": false,
+        "incomePerTick": 15,
+        "incomeInterval": 2
+      }
+    ]
+  },
+  "presentation": {
+    "name": "Economy Tower",
+    "description": "Passive income tower that generates gold on a fixed interval. Does not attack. Invest early for long-term gold advantage.",
+    "sprite": "sprites/default/economy.png"
+  }
+}

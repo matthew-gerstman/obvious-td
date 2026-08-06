@@ -1,0 +1,17 @@
+{
+  "id": "enemy_flyer",
+  "type": "enemy",
+  "archetype": "flyer",
+  "logic": {
+    "baseHP": 50,
+    "speed": 1.5,
+    "flying": true,
+    "goldReward": 10,
+    "isBoss": false
+  },
+  "presentation": {
+    "name": "Flyer",
+    "description": "Flying enemy that ignores ground paths. Only towers with hitsAir can target it.",
+    "sprite": "sprites/default/flyer.png"
+  }
+}

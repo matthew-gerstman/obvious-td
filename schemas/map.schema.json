@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Map",
+  "type": "object",
+  "required": ["id", "type", "logic", "presentation"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^map_" },
+    "type": { "type": "string", "const": "map" },
+    "logic": {
+      "type": "object",
+      "required": ["width", "height", "paths", "buildableTiles", "startPoints", "endPoint"],
+      "additionalProperties": false,
+      "properties": {
+        "width": { "type": "integer", "minimum": 5 },
+        "height": { "type": "integer", "minimum": 5 },
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "waypoints"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "waypoints": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "object",
+                  "required": ["x", "y"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "x": { "type": "integer", "minimum": 0 },
+                    "y": { "type": "integer", "minimum": 0 }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "buildableTiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["x", "y"],
+            "additionalProperties": false,
+            "properties": {
+              "x": { "type": "integer", "minimum": 0 },
+              "y": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "startPoints": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["x", "y", "pathId"],
+            "additionalProperties": false,
+            "properties": {
+              "x": { "type": "integer", "minimum": 0 },
+              "y": { "type": "integer", "minimum": 0 },
+              "pathId": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "endPoint": {
+          "type": "object",
+          "required": ["x", "y"],
+          "additionalProperties": false,
+          "properties": {
+            "x": { "type": "integer", "minimum": 0 },
+            "y": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "presentation": {
+      "type": "object",
+      "required": ["name", "description", "backgroundSprite"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "backgroundSprite": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
