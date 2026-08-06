@@ -60,6 +60,9 @@ export class Renderer {
     // Reset transform and scale so all drawing uses logical coordinates
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 
+    // Nearest-neighbor interpolation for crisp pixel-art scaling
+    this.ctx.imageSmoothingEnabled = false;
+
     this.fitToViewport();
   }
 
@@ -121,6 +124,76 @@ export class Renderer {
     if (style?.baseline) this.ctx.textBaseline = style.baseline;
     this.ctx.fillText(text, x, y);
     this.ctx.restore();
+  }
+
+  /** Draw a filled circle. */
+  drawCircle(x: number, y: number, radius: number, color: string): void {
+    this.ctx.save();
+    this.ctx.fillStyle = color;
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.restore();
+  }
+
+  /** Draw a stroked rectangle (outline only, no fill). */
+  drawStrokeRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    color: string,
+    lineWidth: number = 1,
+  ): void {
+    this.ctx.save();
+    this.ctx.strokeStyle = color;
+    this.ctx.lineWidth = lineWidth;
+    this.ctx.strokeRect(x, y, width, height);
+    this.ctx.restore();
+  }
+
+  /** Draw a line segment. */
+  drawLine(
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    color: string,
+    width: number = 1,
+  ): void {
+    this.ctx.save();
+    this.ctx.strokeStyle = color;
+    this.ctx.lineWidth = width;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x1, y1);
+    this.ctx.lineTo(x2, y2);
+    this.ctx.stroke();
+    this.ctx.restore();
+  }
+
+  /** Set global alpha (0–1) for transparency. */
+  setAlpha(alpha: number): void {
+    this.ctx.globalAlpha = alpha;
+  }
+
+  /** Save canvas state (wraps ctx.save). */
+  save(): void {
+    this.ctx.save();
+  }
+
+  /** Restore canvas state (wraps ctx.restore). */
+  restore(): void {
+    this.ctx.restore();
+  }
+
+  /** Rotate the canvas context. */
+  rotate(angle: number): void {
+    this.ctx.rotate(angle);
+  }
+
+  /** Translate the canvas context. */
+  translate(x: number, y: number): void {
+    this.ctx.translate(x, y);
   }
 
   /** Remove event listeners. Call when the renderer is no longer needed. */

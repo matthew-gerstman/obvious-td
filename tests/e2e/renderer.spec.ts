@@ -122,3 +122,154 @@ test('game loop tick count is deterministic across runs', async ({ page }) => {
   // Each step(60) advances exactly 60 ticks — deterministic
   expect(run2 - run1).toBe(60);
 });
+
+test('drawCircle renders filled pixels at center', async ({ page }) => {
+  await page.goto('/');
+
+  await page.evaluate(() => {
+    (window as unknown as { __gameLoop: GameLoopHandle }).__gameLoop.stop();
+  });
+
+  const circlePixel = await page.evaluate(async () => {
+    const { Renderer } = await import('/src/renderer/renderer.ts');
+    const canvas = document.getElementById('game') as HTMLCanvasElement;
+    const renderer = new Renderer(canvas, { tileSize: 32, mapWidth: 20, mapHeight: 15 });
+    renderer.clear();
+    renderer.drawCircle(48, 48, 20, '#4a90d9');
+    const dpr = window.devicePixelRatio || 1;
+    const data = canvas.getContext('2d')!.getImageData(
+      Math.floor(48 * dpr), Math.floor(48 * dpr), 1, 1,
+    ).data;
+    return { r: data[0] ?? 0, g: data[1] ?? 0, b: data[2] ?? 0, a: data[3] ?? 0 };
+  });
+  expect(circlePixel.r).toBe(74);
+  expect(circlePixel.g).toBe(144);
+  expect(circlePixel.b).toBe(217);
+  expect(circlePixel.a).toBe(255);
+});
+
+test('drawCircle leaves pixels transparent outside radius', async ({ page }) => {
+  await page.goto('/');
+
+  await page.evaluate(() => {
+    (window as unknown as { __gameLoop: GameLoopHandle }).__gameLoop.stop();
+  });
+
+  const outsidePixel = await page.evaluate(async () => {
+    const { Renderer } = await import('/src/renderer/renderer.ts');
+    const canvas = document.getElementById('game') as HTMLCanvasElement;
+    const renderer = new Renderer(canvas, { tileSize: 32, mapWidth: 20, mapHeight: 15 });
+    renderer.clear();
+    // Circle at (48, 48) with radius 10 — pixel at (100, 100) should be outside
+    renderer.drawCircle(48, 48, 10, '#4a90d9');
+    const dpr = window.devicePixelRatio || 1;
+    const data = canvas.getContext('2d')!.getImageData(
+      Math.floor(100 * dpr), Math.floor(100 * dpr), 1, 1,
+    ).data;
+    return { r: data[0] ?? 0, g: data[1] ?? 0, b: data[2] ?? 0, a: data[3] ?? 0 };
+  });
+  expect(outsidePixel.a).toBe(0);
+});
+
+test('drawStrokeRect renders border pixels but not interior', async ({ page }) => {
+  await page.goto('/');
+
+  await page.evaluate(() => {
+    (window as unknown as { __gameLoop: GameLoopHandle }).__gameLoop.stop();
+  });
+
+  const result = await page.evaluate(async () => {
+    const { Renderer } = await import('/src/renderer/renderer.ts');
+    const canvas = document.getElementById('game') as HTMLCanvasElement;
+    const renderer = new Renderer(canvas, { tileSize: 32, mapWidth: 20, mapHeight: 15 });
+    renderer.clear();
+    // Stroked rect at (64, 0) size 32x32, lineWidth 2
+    renderer.drawStrokeRect(64, 0, 32, 32, '#ff6b6b', 2);
+    const dpr = window.devicePixelRatio || 1;
+    // Border pixel at (65, 1) — inside the stroke
+    const borderData = canvas.getContext('2d')!.getImageData(
+      Math.floor(65 * dpr), Math.floor(1 * dpr), 1, 1,
+    ).data;
+    // Interior pixel at (80, 16) — center of rect, should be transparent
+    const interiorData = canvas.getContext('2d')!.getImageData(
+      Math.floor(80 * dpr), Math.floor(16 * dpr), 1, 1,
+    ).data;
+    return {
+      border: { r: borderData[0] ?? 0, g: borderData[1] ?? 0, b: borderData[2] ?? 0, a: borderData[3] ?? 0 },
+      interior: { r: interiorData[0] ?? 0, g: interiorData[1] ?? 0, b: interiorData[2] ?? 0, a: interiorData[3] ?? 0 },
+    };
+  });
+  // Border should have the stroke color
+  expect(result.border.r).toBe(255);
+  expect(result.border.g).toBe(107);
+  expect(result.border.b).toBe(107);
+  expect(result.border.a).toBe(255);
+  // Interior should be transparent (no fill)
+  expect(result.interior.a).toBe(0);
+});
+
+test('drawLine renders pixels along the segment', async ({ page }) => {
+  await page.goto('/');
+
+  await page.evaluate(() => {
+    (window as unknown as { __gameLoop: GameLoopHandle }).__gameLoop.stop();
+  });
+
+  const linePixel = await page.evaluate(async () => {
+    const { Renderer } = await import('/src/renderer/renderer.ts');
+    const canvas = document.getElementById('game') as HTMLCanvasElement;
+    const renderer = new Renderer(canvas, { tileSize: 32, mapWidth: 20, mapHeight: 15 });
+    renderer.clear();
+    // Horizontal line from (0, 48) to (100, 48)
+    renderer.drawLine(0, 48, 100, 48, '#4a90d9', 2);
+    const dpr = window.devicePixelRatio || 1;
+    const data = canvas.getContext('2d')!.getImageData(
+      Math.floor(50 * dpr), Math.floor(48 * dpr), 1, 1,
+    ).data;
+    return { r: data[0] ?? 0, g: data[1] ?? 0, b: data[2] ?? 0, a: data[3] ?? 0 };
+  });
+  expect(linePixel.r).toBe(74);
+  expect(linePixel.g).toBe(144);
+  expect(linePixel.b).toBe(217);
+  expect(linePixel.a).toBe(255);
+});
+
+test('drawLine leaves pixels transparent off the segment', async ({ page }) => {
+  await page.goto('/');
+
+  await page.evaluate(() => {
+    (window as unknown as { __gameLoop: GameLoopHandle }).__gameLoop.stop();
+  });
+
+  const offLinePixel = await page.evaluate(async () => {
+    const { Renderer } = await import('/src/renderer/renderer.ts');
+    const canvas = document.getElementById('game') as HTMLCanvasElement;
+    const renderer = new Renderer(canvas, { tileSize: 32, mapWidth: 20, mapHeight: 15 });
+    renderer.clear();
+    // Horizontal line at y=48 — pixel at y=100 should be transparent
+    renderer.drawLine(0, 48, 100, 48, '#4a90d9', 2);
+    const dpr = window.devicePixelRatio || 1;
+    const data = canvas.getContext('2d')!.getImageData(
+      Math.floor(50 * dpr), Math.floor(100 * dpr), 1, 1,
+    ).data;
+    return { r: data[0] ?? 0, g: data[1] ?? 0, b: data[2] ?? 0, a: data[3] ?? 0 };
+  });
+  expect(offLinePixel.a).toBe(0);
+});
+
+test('imageSmoothingEnabled is false after resize', async ({ page }) => {
+  await page.goto('/');
+
+  await page.evaluate(() => {
+    (window as unknown as { __gameLoop: GameLoopHandle }).__gameLoop.stop();
+  });
+
+  const smoothing = await page.evaluate(async () => {
+    const { Renderer } = await import('/src/renderer/renderer.ts');
+    const canvas = document.getElementById('game') as HTMLCanvasElement;
+    new Renderer(canvas, { tileSize: 32, mapWidth: 20, mapHeight: 15 });
+    return canvas.getContext('2d')!.imageSmoothingEnabled;
+  });
+  expect(smoothing).toBe(false);
+});
+
