@@ -152,9 +152,8 @@ test('tower appears on canvas after placement via tap', async ({ page }) => {
       .__towerUI.handleTileTap({ x, y });
   }, { x: 3, y: 7 });
 
-  // Wait for cannon color at tower position
-  // Cannon: #d9744a = (217, 116, 74)
-  // Tower at tile (2,5): pixel center ~ (78, 174)
+  // Wait for tower sprite to appear — pixel at tower center differs from
+  // the buildable background (grass + blue overlay ≈ (59, 93, 93))
   await page.waitForFunction(
     () => {
       const canvas = document.getElementById('game') as HTMLCanvasElement;
@@ -166,7 +165,12 @@ test('tower appears on canvas after placement via tap', async ({ page }) => {
         1,
         1,
       ).data;
-      return data[0] === 217 && data[1] === 116 && data[2] === 74;
+      const tol = 15;
+      return (
+        Math.abs(data[0] - 59) > tol ||
+        Math.abs(data[1] - 93) > tol ||
+        Math.abs(data[2] - 93) > tol
+      );
     },
     { timeout: 5000 },
   );

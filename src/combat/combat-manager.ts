@@ -73,6 +73,7 @@ export class CombatManager {
         target.x,
         target.y,
         tower.archetype.archetype,
+        tower.archetype.presentation?.projectileSprite,
       );
 
       // Reset cooldown using effective cooldown (may be shortened by aura fire-rate buff)

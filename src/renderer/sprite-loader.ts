@@ -38,8 +38,12 @@ export class SpriteCache {
   /** Load a sprite and store it in the cache. No-op if already cached. */
   async load(path: string): Promise<void> {
     if (this.cache.has(path)) return;
-    const sprite = await loadSprite(path);
-    this.cache.set(path, sprite);
+    try {
+      const sprite = await loadSprite(path);
+      this.cache.set(path, sprite);
+    } catch {
+      // Sprite failed to load — get() returns null, triggering fallback rendering
+    }
   }
 
   /** Get a cached sprite, or null if not loaded. */

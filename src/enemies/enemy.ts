@@ -25,6 +25,7 @@ export class Enemy implements RuntimeEnemy {
   readonly flying: boolean;
   readonly isBoss: boolean;
   readonly goldReward: number;
+  readonly spritePath: string;
   readonly pathId: string;
   pathProgress: number;
   x: number;
@@ -58,6 +59,7 @@ export class Enemy implements RuntimeEnemy {
     this.flying = logic.flying;
     this.isBoss = logic.isBoss;
     this.goldReward = logic.goldReward;
+    this.spritePath = enemyData.presentation?.sprite ?? '';
     this.pathId = pathId;
     this.pathProgress = 0;
     this.x = 0;

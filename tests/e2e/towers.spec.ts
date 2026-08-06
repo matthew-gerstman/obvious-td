@@ -4,7 +4,8 @@ const TILE_SIZE = 32;
 
 // Colors from tower-ui.ts
 const PANEL_BORDER: RGB = { r: 74, g: 144, b: 217 }; // #4a90d9
-const CANNON_COLOR: RGB = { r: 217, g: 116, b: 74 }; // #d9744a
+// Background at buildable tile: grass #2d4a2d + rgba(100,149,237,0.25) overlay
+const BG_BUILDABLE: RGB = { r: 59, g: 93, b: 93 };
 
 // Panel position for tile (2, 5)
 const PANEL_X = (2 + 1) * TILE_SIZE; // 96
@@ -89,14 +90,15 @@ async function waitForPixel(
   );
 }
 
-async function waitForPixelNot(
+async function waitForPixelNotApprox(
   page: Page,
   x: number,
   y: number,
   unexpected: RGB,
+  tolerance = 15,
 ): Promise<void> {
   await page.waitForFunction(
-    ({ x, y, unexpected }) => {
+    ({ x, y, unexpected, tolerance }) => {
       const canvas = document.getElementById('game') as HTMLCanvasElement;
       const ctx = canvas.getContext('2d')!;
       const dpr = window.devicePixelRatio || 1;
@@ -106,13 +108,41 @@ async function waitForPixelNot(
         1,
         1,
       ).data;
-      return !(
-        data[0] === unexpected.r &&
-        data[1] === unexpected.g &&
-        data[2] === unexpected.b
+      return (
+        Math.abs(data[0] - unexpected.r) > tolerance ||
+        Math.abs(data[1] - unexpected.g) > tolerance ||
+        Math.abs(data[2] - unexpected.b) > tolerance
       );
     },
-    { x, y, unexpected },
+    { x, y, unexpected, tolerance },
+  );
+}
+
+async function waitForPixelApprox(
+  page: Page,
+  x: number,
+  y: number,
+  expected: RGB,
+  tolerance = 15,
+): Promise<void> {
+  await page.waitForFunction(
+    ({ x, y, expected, tolerance }) => {
+      const canvas = document.getElementById('game') as HTMLCanvasElement;
+      const ctx = canvas.getContext('2d')!;
+      const dpr = window.devicePixelRatio || 1;
+      const data = ctx.getImageData(
+        Math.floor(x * dpr),
+        Math.floor(y * dpr),
+        1,
+        1,
+      ).data;
+      return (
+        Math.abs(data[0] - expected.r) <= tolerance &&
+        Math.abs(data[1] - expected.g) <= tolerance &&
+        Math.abs(data[2] - expected.b) <= tolerance
+      );
+    },
+    { x, y, expected, tolerance },
   );
 }
 
@@ -158,8 +188,8 @@ test('tower appears at tile position after selecting from build panel', async ({
   // Tile (3, 7) has pixel center at (112, 240) — within row 2
   await tapTile(page, 3, 7);
 
-  // Wait for cannon color at tower position
-  await waitForPixel(page, TOWER_X, TOWER_Y, CANNON_COLOR);
+  // Wait for tower sprite to appear (pixel differs from buildable background)
+  await waitForPixelNotApprox(page, TOWER_X, TOWER_Y, BG_BUILDABLE);
 
   // Verify tower exists in manager
   const towerExists = await page.evaluate(() => {
@@ -182,8 +212,8 @@ test('info panel appears when tapping an existing tower', async ({ page }) => {
   await tapTile(page, 2, 5);
   await tapTile(page, 3, 7);
 
-  // Wait for tower to appear
-  await waitForPixel(page, TOWER_X, TOWER_Y, CANNON_COLOR);
+  // Wait for tower sprite to appear
+  await waitForPixelNotApprox(page, TOWER_X, TOWER_Y, BG_BUILDABLE);
 
   // Tap the existing tower to show info panel
   await tapTile(page, 2, 5);
@@ -210,8 +240,8 @@ test('tower is removed from canvas after selling', async ({ page }) => {
   await tapTile(page, 2, 5);
   await tapTile(page, 3, 7);
 
-  // Wait for tower to appear
-  await waitForPixel(page, TOWER_X, TOWER_Y, CANNON_COLOR);
+  // Wait for tower sprite to appear
+  await waitForPixelNotApprox(page, TOWER_X, TOWER_Y, BG_BUILDABLE);
 
   // Tap the existing tower to show info panel
   await tapTile(page, 2, 5);
@@ -223,8 +253,8 @@ test('tower is removed from canvas after selling', async ({ page }) => {
   // Sell button bounds: x=[221, 311], y=[332, 364]
   await tapTile(page, 7, 10);
 
-  // Wait for tower color to be gone
-  await waitForPixelNot(page, TOWER_X, TOWER_Y, CANNON_COLOR);
+  // Wait for tower to be gone — pixel returns to buildable background
+  await waitForPixelApprox(page, TOWER_X, TOWER_Y, BG_BUILDABLE);
 
   // Verify tower is removed from manager
   const towerExists = await page.evaluate(() => {

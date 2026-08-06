@@ -1,4 +1,5 @@
 import type { Renderer } from '../renderer/renderer';
+import type { SpriteCache } from '../renderer/sprite-loader';
 
 export interface Projectile {
   fromX: number;
@@ -8,6 +9,7 @@ export interface Projectile {
   age: number;
   lifetime: number;
   color: string;
+  spritePath?: string;
 }
 
 const PROJECTILE_COLORS: Record<string, string> = {
@@ -34,6 +36,7 @@ export class ProjectileManager {
     toX: number,
     toY: number,
     towerType: string,
+    spritePath?: string,
   ): void {
     this.projectiles.push({
       fromX,
@@ -43,6 +46,7 @@ export class ProjectileManager {
       age: 0,
       lifetime: PROJECTILE_LIFETIME,
       color: PROJECTILE_COLORS[towerType] ?? '#ffffff',
+      spritePath,
     });
   }
 
@@ -53,12 +57,18 @@ export class ProjectileManager {
     this.projectiles = this.projectiles.filter((p) => p.age < p.lifetime);
   }
 
-  render(renderer: Renderer, tileSize: number): void {
+  render(renderer: Renderer, tileSize: number, spriteCache?: SpriteCache): void {
     for (const p of this.projectiles) {
       const progress = p.age / p.lifetime;
       const x = p.fromX + (p.toX - p.fromX) * progress;
       const y = p.fromY + (p.toY - p.fromY) * progress;
-      renderer.drawRect(x * tileSize, y * tileSize, 4, 4, p.color);
+
+      const sprite = p.spritePath ? spriteCache?.get(p.spritePath) : null;
+      if (sprite) {
+        renderer.drawSprite(sprite, x * tileSize - 4, y * tileSize - 4, 8, 8);
+      } else {
+        renderer.drawRect(x * tileSize, y * tileSize, 4, 4, p.color);
+      }
     }
   }
 
