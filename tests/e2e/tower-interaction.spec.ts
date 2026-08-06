@@ -56,13 +56,24 @@ async function setHoverTile(page: Page, x: number, y: number): Promise<void> {
 
 // ── Range circle on placement hover ─────────────────────────────
 
-test('range circle appears when build panel is open on a buildable tile', async ({ page }) => {
+test('range circle appears when hovering a tower type in the build panel', async ({ page }) => {
   await page.goto('/');
   await startGame(page);
   await waitForGameSystems(page);
 
   // Tap buildable tile (2, 5) to open build panel
   await tapTile(page, 2, 5);
+
+  // Wait for build panel to be in build mode
+  await page.waitForFunction(
+    () => (window as unknown as { __towerUI: { panelMode: string } }).__towerUI.panelMode === 'build',
+    { timeout: 5000 },
+  );
+
+  // Hover over gatling row (row 0) in the build panel.
+  // Panel at (96, 160). Row 0: y=[194, 226], x=[96, 356].
+  // Tile (3, 6) has pixel center (112, 208) — within row 0.
+  await setHoverTile(page, 3, 6);
 
   // Range circle center: (2*32 + 16, 5*32 + 16) = (80, 176)
   // Gatling range 2.5 → radius 80px. Check a pixel 50px above center
@@ -85,12 +96,6 @@ test('range circle appears when build panel is open on a buildable tile', async 
     },
     { timeout: 5000 },
   );
-
-  // Verify panel is in build mode
-  const mode = await page.evaluate(() => {
-    return (window as unknown as { __towerUI: { panelMode: string } }).__towerUI.panelMode;
-  });
-  expect(mode).toBe('build');
 });
 
 // ── Range circle on tower selection ─────────────────────────────
@@ -147,7 +152,7 @@ test('range circle appears when a tower is selected (info panel)', async ({ page
 
 // ── Ghost preview: green border on buildable tile ───────────────
 
-test('ghost preview shows green border on buildable tile', async ({ page }) => {
+test('ghost preview shows green border on selected tile when hovering a tower type', async ({ page }) => {
   await page.goto('/');
   await startGame(page);
   await waitForGameSystems(page);
@@ -155,20 +160,27 @@ test('ghost preview shows green border on buildable tile', async ({ page }) => {
   // Open build panel at (2, 5). Panel covers x=[96,356], y=[160,424].
   await tapTile(page, 2, 5);
 
-  // Hover over (2, 9) — buildable tile outside the panel area
-  await setHoverTile(page, 2, 9);
+  // Wait for build panel
+  await page.waitForFunction(
+    () => (window as unknown as { __towerUI: { panelMode: string } }).__towerUI.panelMode === 'build',
+    { timeout: 5000 },
+  );
 
-  // Check for green border at top-left corner of tile (2, 9)
-  // Border at (2*32, 9*32) = (64, 288). x=64 < 96, outside panel.
-  // Green: #51cf66 = RGB(81, 207, 102)
+  // Hover over gatling row (row 0). Tile (3, 6) → pixel center (112, 208).
+  await setHoverTile(page, 3, 6);
+
+  // Ghost preview and border are drawn at the selected tile (2, 5),
+  // not the hovered tile. Border at (64, 160) — top-left of tile (2, 5).
+  // x=64 < 96, outside panel area. Green: #51cf66 = RGB(81, 207, 102).
+  // Use (70, 160) — on the top-edge path (center of 2px stroke).
   await page.waitForFunction(
     () => {
       const canvas = document.getElementById('game') as HTMLCanvasElement;
       const ctx = canvas.getContext('2d')!;
       const dpr = window.devicePixelRatio || 1;
       const data = ctx.getImageData(
-        Math.floor(64 * dpr),
-        Math.floor(288 * dpr),
+        Math.floor(70 * dpr),
+        Math.floor(160 * dpr),
         1,
         1,
       ).data;
@@ -185,37 +197,40 @@ test('ghost preview shows green border on buildable tile', async ({ page }) => {
 
 // ── Ghost preview: red border on non-buildable tile ─────────────
 
-test('ghost preview shows red border on non-buildable tile', async ({ page }) => {
+test('no range circle when build panel is open but no tower type is hovered', async ({ page }) => {
   await page.goto('/');
   await startGame(page);
   await waitForGameSystems(page);
 
-  // Open build panel at (2, 5). Panel covers x=[96,356], y=[160,424].
+  // Tap buildable tile (2, 5) to open build panel
   await tapTile(page, 2, 5);
 
-  // Hover over (1, 7) — path tile, non-buildable, outside panel area
-  await setHoverTile(page, 1, 7);
+  // Wait for build panel to be in build mode
+  await page.waitForFunction(
+    () => (window as unknown as { __towerUI: { panelMode: string } }).__towerUI.panelMode === 'build',
+    { timeout: 5000 },
+  );
 
-  // Check for red border at top-left corner of tile (1, 7)
-  // Border at (1*32, 7*32) = (32, 224). x=32 < 96, outside panel.
-  // Red: #ff6b6b = RGB(255, 107, 107)
+  // Set hover to a tile outside the panel area — no archetype hovered
+  await setHoverTile(page, 0, 0);
+
+  // Range circle center: (80, 176), Gatling range 2.5 → radius 80px.
+  // Pixel at (80, 126) — 50px above center, within range.
+  // Without range circle: grass B ≈ 45. With range circle: B > 70.
+  // Verify NO range circle is drawn — B should stay near grass background.
   await page.waitForFunction(
     () => {
       const canvas = document.getElementById('game') as HTMLCanvasElement;
       const ctx = canvas.getContext('2d')!;
       const dpr = window.devicePixelRatio || 1;
       const data = ctx.getImageData(
-        Math.floor(32 * dpr),
-        Math.floor(224 * dpr),
+        Math.floor(80 * dpr),
+        Math.floor(126 * dpr),
         1,
         1,
       ).data;
-      const tol = 20;
-      return (
-        Math.abs(data[0]! - 255) < tol &&
-        Math.abs(data[1]! - 107) < tol &&
-        Math.abs(data[2]! - 107) < tol
-      );
+      // No range circle: B should be well below the blue-tinted threshold
+      return data[2]! < 70;
     },
     { timeout: 5000 },
   );
