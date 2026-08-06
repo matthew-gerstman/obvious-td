@@ -21,6 +21,78 @@
           }
         }
       }
+    },
+    "ui": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["title", "subtitle", "bgColor", "titleColor", "buttonBg", "buttonBgSelected", "buttonBorder", "buttonBorderSelected"],
+          "properties": {
+            "title": { "type": "string", "minLength": 1 },
+            "subtitle": { "type": "string", "minLength": 1 },
+            "bgColor": { "type": "string", "minLength": 1 },
+            "titleColor": { "type": "string", "minLength": 1 },
+            "buttonBg": { "type": "string", "minLength": 1 },
+            "buttonBgSelected": { "type": "string", "minLength": 1 },
+            "buttonBorder": { "type": "string", "minLength": 1 },
+            "buttonBorderSelected": { "type": "string", "minLength": 1 }
+          }
+        },
+        "hud": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["currencyLabel", "livesLabel", "currencyColor", "livesColor", "waveColor", "bgColor", "buttonBg", "buttonBorder"],
+          "properties": {
+            "currencyLabel": { "type": "string", "minLength": 1 },
+            "livesLabel": { "type": "string", "minLength": 1 },
+            "currencyColor": { "type": "string", "minLength": 1 },
+            "livesColor": { "type": "string", "minLength": 1 },
+            "waveColor": { "type": "string", "minLength": 1 },
+            "bgColor": { "type": "string", "minLength": 1 },
+            "buttonBg": { "type": "string", "minLength": 1 },
+            "buttonBorder": { "type": "string", "minLength": 1 }
+          }
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["victoryText", "defeatText", "victoryColor", "defeatColor", "bgColor", "returnText"],
+          "properties": {
+            "victoryText": { "type": "string", "minLength": 1 },
+            "defeatText": { "type": "string", "minLength": 1 },
+            "victoryColor": { "type": "string", "minLength": 1 },
+            "defeatColor": { "type": "string", "minLength": 1 },
+            "bgColor": { "type": "string", "minLength": 1 },
+            "returnText": { "type": "string", "minLength": 1 }
+          }
+        },
+        "towerUI": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["panelBg", "panelBorder", "towerColors"],
+          "properties": {
+            "panelBg": { "type": "string", "minLength": 1 },
+            "panelBorder": { "type": "string", "minLength": 1 },
+            "towerColors": {
+              "type": "object",
+              "patternProperties": {
+                ".+": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        },
+        "pathTiles": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["spriteDir"],
+          "properties": {
+            "spriteDir": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
     }
   }
 }

@@ -7,6 +7,7 @@ export interface MapRenderOptions {
   showGrid?: boolean;
   tileSize?: number;
   spriteCache?: SpriteCache;
+  pathTileDir?: string;
 }
 
 // Fallback colors used when sprites are not available
@@ -17,15 +18,8 @@ const GRID_COLOR = 'rgba(255, 255, 255, 0.08)';
 const START_COLOR = '#51cf66'; // green marker
 const END_COLOR = '#ff6b6b'; // red marker
 
-// Path tile sprite paths
-const PATH_SPRITES: Record<string, string> = {
-  h: 'sprites/default/path_tile_h.png',
-  v: 'sprites/default/path_tile_v.png',
-  corner_ne: 'sprites/default/path_tile_corner_ne.png',
-  corner_nw: 'sprites/default/path_tile_corner_nw.png',
-  corner_se: 'sprites/default/path_tile_corner_se.png',
-  corner_sw: 'sprites/default/path_tile_corner_sw.png',
-};
+// Default path tile sprite directory
+const DEFAULT_PATH_DIR = 'sprites/default';
 
 /** Determine path tile orientation from neighboring path tiles. */
 function getPathTileType(map: GameMap, x: number, y: number): string {
@@ -77,7 +71,8 @@ export function renderMap(
     for (let x = 0; x < map.width; x++) {
       if (map.isPathTile(x, y)) {
         const tileType = getPathTileType(map, x, y);
-        const spritePath = PATH_SPRITES[tileType] ?? PATH_SPRITES['h'];
+        const dir = options?.pathTileDir ?? DEFAULT_PATH_DIR;
+        const spritePath = `${dir}/path_tile_${tileType}.png`;
         const sprite = options?.spriteCache?.get(spritePath);
         if (sprite) {
           renderer.drawSprite(sprite, x * tileSize, y * tileSize, tileSize, tileSize);

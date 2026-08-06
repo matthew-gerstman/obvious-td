@@ -1,4 +1,5 @@
 import type { Renderer } from '../renderer/renderer';
+import type { HUDTheme } from '../logic/types';
 
 interface ButtonBounds {
   x: number;
@@ -87,6 +88,7 @@ export interface HUDContext {
  * and boss telegraph banner. All rendering via drawRect/drawText.
  */
 export class HUD {
+  hudTheme: HUDTheme | null = null;
   private onStartWave: (() => void) | null = null;
   private onToggleSpeed: (() => void) | null = null;
   private onTogglePause: (() => void) | null = null;
@@ -98,6 +100,10 @@ export class HUD {
   ) {
     this.onStartWave = onStartWave;
     this.onToggleSpeed = onToggleSpeed;
+  }
+
+  setTheme(hudTheme: HUDTheme | null): void {
+    this.hudTheme = hudTheme;
   }
 
   setOnStartWave(onStartWave: () => void): void {
@@ -172,25 +178,36 @@ export class HUD {
   }
 
   render(renderer: Renderer, ctx: HUDContext): void {
+    // Themed values (fall back to hardcoded constants)
+    const t = this.hudTheme;
+    const bgColor = t?.bgColor ?? HUD_BG;
+    const currencyLabel = t?.currencyLabel ?? 'Gold';
+    const livesLabel = t?.livesLabel ?? 'Lives';
+    const currencyColor = t?.currencyColor ?? GOLD_COLOR;
+    const livesColor = t?.livesColor ?? LIVES_COLOR;
+    const waveColor = t?.waveColor ?? WAVE_COLOR;
+    const buttonBg = t?.buttonBg ?? BUTTON_BG;
+    const buttonBorder = t?.buttonBorder ?? BUTTON_BORDER;
+
     // Top bar background
-    renderer.drawRect(0, 0, CANVAS_WIDTH, 32, HUD_BG);
+    renderer.drawRect(0, 0, CANVAS_WIDTH, 32, bgColor);
 
     // Gold (top-left)
-    renderer.drawText(`Gold: ${ctx.gold}`, 10, 21, {
-      color: GOLD_COLOR,
+    renderer.drawText(`${currencyLabel}: ${ctx.gold}`, 10, 21, {
+      color: currencyColor,
       font: 'bold 14px sans-serif',
     });
 
     // Lives (top-center)
-    renderer.drawText(`Lives: ${ctx.lives}`, CANVAS_WIDTH / 2, 21, {
-      color: LIVES_COLOR,
+    renderer.drawText(`${livesLabel}: ${ctx.lives}`, CANVAS_WIDTH / 2, 21, {
+      color: livesColor,
       font: 'bold 14px sans-serif',
       align: 'center',
     });
 
     // Wave (top-right)
     renderer.drawText(`Wave ${ctx.waveNumber}/${ctx.totalWaves}`, CANVAS_WIDTH - 10, 21, {
-      color: WAVE_COLOR,
+      color: waveColor,
       font: 'bold 14px sans-serif',
       align: 'right',
     });
@@ -238,9 +255,9 @@ export class HUD {
         START_WAVE_BOUNDS.y,
         START_WAVE_BOUNDS.w,
         START_WAVE_BOUNDS.h,
-        BUTTON_BG,
+        buttonBg,
       );
-      this.drawBorder(renderer, START_WAVE_BOUNDS, BUTTON_BORDER);
+      this.drawBorder(renderer, START_WAVE_BOUNDS, buttonBorder);
       renderer.drawText(
         'Start Wave',
         START_WAVE_BOUNDS.x + START_WAVE_BOUNDS.w / 2,
@@ -251,7 +268,7 @@ export class HUD {
 
     // Pause button (bottom-left, WAVE_PREP and WAVE_ACTIVE)
     if (ctx.showPauseButton) {
-      const pauseBg = ctx.paused ? BUTTON_BG_ACTIVE : BUTTON_BG;
+      const pauseBg = ctx.paused ? BUTTON_BG_ACTIVE : buttonBg;
       renderer.drawRect(
         PAUSE_BOUNDS.x,
         PAUSE_BOUNDS.y,
@@ -259,7 +276,7 @@ export class HUD {
         PAUSE_BOUNDS.h,
         pauseBg,
       );
-      this.drawBorder(renderer, PAUSE_BOUNDS, BUTTON_BORDER);
+      this.drawBorder(renderer, PAUSE_BOUNDS, buttonBorder);
       renderer.drawText(
         ctx.paused ? 'Resume' : 'Pause',
         PAUSE_BOUNDS.x + PAUSE_BOUNDS.w / 2,
@@ -270,7 +287,7 @@ export class HUD {
 
     // Auto-start toggle (bottom, WAVE_PREP only)
     if (ctx.showAutoStartToggle) {
-      const autoBg = ctx.autoStartEnabled ? BUTTON_BG_ACTIVE : BUTTON_BG;
+      const autoBg = ctx.autoStartEnabled ? BUTTON_BG_ACTIVE : buttonBg;
       renderer.drawRect(
         AUTO_START_BOUNDS.x,
         AUTO_START_BOUNDS.y,
@@ -278,7 +295,7 @@ export class HUD {
         AUTO_START_BOUNDS.h,
         autoBg,
       );
-      this.drawBorder(renderer, AUTO_START_BOUNDS, BUTTON_BORDER);
+      this.drawBorder(renderer, AUTO_START_BOUNDS, buttonBorder);
       renderer.drawText(
         `Auto: ${ctx.autoStartEnabled ? 'ON' : 'OFF'}`,
         AUTO_START_BOUNDS.x + AUTO_START_BOUNDS.w / 2,
@@ -292,7 +309,7 @@ export class HUD {
       ? BUTTON_BG_DISABLED
       : ctx.speedMultiplier > 1
         ? BUTTON_BG_ACTIVE
-        : BUTTON_BG;
+        : buttonBg;
     renderer.drawRect(
       SPEED_BOUNDS.x,
       SPEED_BOUNDS.y,
@@ -300,7 +317,7 @@ export class HUD {
       SPEED_BOUNDS.h,
       speedBg,
     );
-    this.drawBorder(renderer, SPEED_BOUNDS, ctx.paused ? BUTTON_BORDER_DISABLED : BUTTON_BORDER);
+    this.drawBorder(renderer, SPEED_BOUNDS, ctx.paused ? BUTTON_BORDER_DISABLED : buttonBorder);
     renderer.drawText(
       `${ctx.speedMultiplier}x`,
       SPEED_BOUNDS.x + SPEED_BOUNDS.w / 2,

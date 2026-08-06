@@ -1,0 +1,137 @@
+{
+  "theme": "dragon-ball",
+  "overrides": {
+    "tower_gatling": {
+      "name": "Ki Blast Turret",
+      "description": "Rapid-fire ki blast emitter. Cheap and relentless, perfect for holding the line against weak invaders.",
+      "sprite": "sprites/dragon-ball/gatling.png",
+      "projectileSprite": "sprites/dragon-ball/gatling_projectile.png"
+    },
+    "tower_cannon": {
+      "name": "Kamehameha Cannon",
+      "description": "Wide energy wave emitter. Devastating at choke points where invaders cluster together.",
+      "sprite": "sprites/dragon-ball/cannon.png",
+      "projectileSprite": "sprites/dragon-ball/cannon_projectile.png"
+    },
+    "tower_frost": {
+      "name": "Solar Flare",
+      "description": "Blinding light crystal that slows enemies with searing radiance. Gives defenders time to regroup.",
+      "sprite": "sprites/dragon-ball/frost.png",
+      "projectileSprite": "sprites/dragon-ball/frost_projectile.png"
+    },
+    "tower_poison": {
+      "name": "Hellzone Grenade",
+      "description": "Energy sphere cluster that inflicts lingering damage on enemies. The corruption spreads, ignoring armor.",
+      "sprite": "sprites/dragon-ball/poison.png",
+      "projectileSprite": "sprites/dragon-ball/poison_projectile.png"
+    },
+    "tower_sniper": {
+      "name": "Special Beam Cannon",
+      "description": "Thin piercing beam that strikes the strongest enemies from afar. Armor-piercing and far-reaching, hits ground and air.",
+      "sprite": "sprites/dragon-ball/sniper.png",
+      "projectileSprite": "sprites/dragon-ball/sniper_projectile.png"
+    },
+    "tower_aura": {
+      "name": "Kaioken Aura",
+      "description": "Pulsing red aura that empowers nearby towers with enhanced damage, range, and fire rate.",
+      "sprite": "sprites/dragon-ball/aura.png"
+    },
+    "tower_economy": {
+      "name": "Capsule Corp Generator",
+      "description": "A Capsule Corporation device that generates a steady stream of Zeni for Earth's defense.",
+      "sprite": "sprites/dragon-ball/economy.png"
+    },
+    "enemy_runner": {
+      "name": "Saibaman",
+      "description": "A small, fast creature grown from seeds. Fragile but quick — don't let it slip through.",
+      "sprite": "sprites/dragon-ball/runner.png"
+    },
+    "enemy_grunt": {
+      "name": "Frieza Soldier",
+      "description": "A rank-and-file soldier in battle armor. Balanced threat that forms the core of every assault.",
+      "sprite": "sprites/dragon-ball/grunt.png"
+    },
+    "enemy_armored": {
+      "name": "Android",
+      "description": "A metallic humanoid with heavy plating. Reduces incoming damage by half unless struck with armor-piercing weapons.",
+      "sprite": "sprites/dragon-ball/armored.png"
+    },
+    "enemy_flyer": {
+      "name": "Flying Saibaman",
+      "description": "A winged Saibaman that soars above ground defenses. Only towers with anti-air can strike it from the sky.",
+      "sprite": "sprites/dragon-ball/flyer.png"
+    },
+    "enemy_swarm": {
+      "name": "Cell Junior",
+      "description": "A small purple creature that spawns in overwhelming numbers. Each individual is weak, but their horde can break through.",
+      "sprite": "sprites/dragon-ball/swarm.png"
+    },
+    "enemy_boss": {
+      "name": "Demon King",
+      "description": "A towering villain leading the assault on Earth. Massive HP, thick armor, and a bounty of Zeni for whoever fells it.",
+      "sprite": "sprites/dragon-ball/boss.png"
+    },
+    "map_single_path": {
+      "name": "Snake Way",
+      "description": "The winding path of the afterlife. Master your defense on this serpentine road.",
+      "backgroundSprite": "sprites/dragon-ball/map_single_path_bg.png"
+    },
+    "map_multi_path": {
+      "name": "Planet Namek",
+      "description": "Two approaches converge on a single point. Split your defenses wisely — both lanes demand attention.",
+      "backgroundSprite": "sprites/dragon-ball/map_multi_path_bg.png"
+    },
+    "map_branching": {
+      "name": "Cell Games Arena",
+      "description": "One path forks and rejoins. Choose to funnel enemies at the merge or defend each branch independently.",
+      "backgroundSprite": "sprites/dragon-ball/map_branching_bg.png"
+    }
+  },
+  "ui": {
+    "title": {
+      "title": "Don't Let the Villains Destroy Earth!",
+      "subtitle": "A Dragon Ball Z Tower Defense Game",
+      "bgColor": "#0a0a1a",
+      "titleColor": "#ff9933",
+      "buttonBg": "#2a2a4a",
+      "buttonBgSelected": "#cc4400",
+      "buttonBorder": "#ff6600",
+      "buttonBorderSelected": "#ff9933"
+    },
+    "hud": {
+      "currencyLabel": "Zeni",
+      "livesLabel": "Earth HP",
+      "currencyColor": "#ffcc00",
+      "livesColor": "#ff4444",
+      "waveColor": "#ff9933",
+      "bgColor": "rgba(10, 10, 26, 0.8)",
+      "buttonBg": "#cc4400",
+      "buttonBorder": "#ff6600"
+    },
+    "result": {
+      "victoryText": "Earth is Safe!",
+      "defeatText": "Earth Has Been Destroyed!",
+      "victoryColor": "#51cf66",
+      "defeatColor": "#ff4444",
+      "bgColor": "#0a0a1a",
+      "returnText": "Return to Title"
+    },
+    "towerUI": {
+      "panelBg": "rgba(10, 10, 26, 0.95)",
+      "panelBorder": "#ff6600",
+      "towerColors": {
+        "gatling": "#4a90d9",
+        "cannon": "#ff6600",
+        "frost": "#ffeb3b",
+        "poison": "#9b59b6",
+        "sniper": "#ffcc00",
+        "aura": "#ff3333",
+        "economy": "#4ad97a"
+      }
+    },
+    "pathTiles": {
+      "spriteDir": "sprites/dragon-ball"
+    }
+  }
+}
+

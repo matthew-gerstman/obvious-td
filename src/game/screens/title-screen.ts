@@ -1,5 +1,6 @@
 import type { Renderer } from '../../renderer/renderer';
 import type { DifficultyKey } from '../game-state';
+import type { TitleTheme, ThemeOption, ThemeData } from '../../logic/types';
 
 export interface MapOption {
   id: string;
@@ -22,10 +23,11 @@ interface ButtonBounds {
 
 interface TitleButton {
   bounds: ButtonBounds;
-  type: 'difficulty' | 'map' | 'start';
+  type: 'difficulty' | 'map' | 'start' | 'theme';
   key?: string;
 }
 
+// Default hardcoded values — used when no theme is provided
 const BG_COLOR = '#1a1a2e';
 const TITLE_COLOR = '#e0e0e0';
 const SUBTITLE_COLOR = '#888';
@@ -68,6 +70,12 @@ const START_BOUNDS: ButtonBounds = {
   h: 48,
 };
 
+// Theme selector layout
+const THEME_Y = 78;
+const THEME_BTN_W = 150;
+const THEME_BTN_H = 20;
+const THEME_BTN_GAP = 8;
+
 /**
  * Canvas-rendered title screen with difficulty and map selection.
  * All UI is drawn via the renderer's drawRect/drawText — no HTML DOM.
@@ -76,8 +84,13 @@ const START_BOUNDS: ButtonBounds = {
 export class TitleScreen {
   selectedDifficulty: DifficultyKey | null = null;
   selectedMapId: string | null = null;
+  selectedTheme = 'demons-heaven';
   private buttons: TitleButton[] = [];
   private onStart: (() => void) | null = null;
+  private onThemeSelect: ((themeId: string) => void) | null = null;
+  private titleTheme: TitleTheme | null = null;
+  private mapOverrides: Record<string, Record<string, string>> | null = null;
+  private availableThemes: ThemeOption[] = [];
 
   constructor(onStart: (() => void) | null = null) {
     this.onStart = onStart;
@@ -88,12 +101,24 @@ export class TitleScreen {
     this.onStart = onStart;
   }
 
+  setOnThemeSelect(callback: (themeId: string) => void): void {
+    this.onThemeSelect = callback;
+  }
+
+  /** Set theme data for title screen colors, text, and map names. */
+  setThemeData(themeData: ThemeData | null, availableThemes: ThemeOption[]): void {
+    this.titleTheme = themeData?.ui?.title ?? null;
+    this.mapOverrides = themeData?.overrides ?? null;
+    this.availableThemes = availableThemes;
+    this.buildButtons();
+  }
+
   getDifficultyOptions(): DifficultyOption[] {
     return DIFFICULTY_OPTIONS;
   }
 
   getMapOptions(): MapOption[] {
-    return MAP_OPTIONS;
+    return this.getEffectiveMapOptions();
   }
 
   canStart(): boolean {
@@ -112,6 +137,11 @@ export class TitleScreen {
         y >= btn.bounds.y &&
         y < btn.bounds.y + btn.bounds.h
       ) {
+        if (btn.type === 'theme' && btn.key) {
+          this.selectedTheme = btn.key;
+          this.onThemeSelect?.(btn.key);
+          return true;
+        }
         if (btn.type === 'difficulty' && btn.key) {
           this.selectedDifficulty = btn.key as DifficultyKey;
           return true;
@@ -129,21 +159,83 @@ export class TitleScreen {
     return false;
   }
 
+  /** Resolve effective title theme values with fallbacks to hardcoded defaults. */
+  private resolveTitleTheme(): TitleTheme {
+    return {
+      title: this.titleTheme?.title ?? "Don't Let the Demons Into Heaven",
+      subtitle: this.titleTheme?.subtitle ?? 'A Tower Defense Game',
+      bgColor: this.titleTheme?.bgColor ?? BG_COLOR,
+      titleColor: this.titleTheme?.titleColor ?? TITLE_COLOR,
+      buttonBg: this.titleTheme?.buttonBg ?? BUTTON_BG,
+      buttonBgSelected: this.titleTheme?.buttonBgSelected ?? BUTTON_BG_SELECTED,
+      buttonBorder: this.titleTheme?.buttonBorder ?? BUTTON_BORDER,
+      buttonBorderSelected: this.titleTheme?.buttonBorderSelected ?? BUTTON_BORDER_SELECTED,
+    };
+  }
+
+  private getEffectiveMapOptions(): MapOption[] {
+    if (!this.mapOverrides) return MAP_OPTIONS;
+    return MAP_OPTIONS.map((opt) => {
+      const override = this.mapOverrides[opt.id];
+      if (!override) return opt;
+      return {
+        id: opt.id,
+        name: override.name ?? opt.name,
+        description: override.description ?? opt.description,
+      };
+    });
+  }
+
+  private getThemeButtonBounds(): ButtonBounds[] {
+    if (this.availableThemes.length === 0) return [];
+    const totalWidth =
+      this.availableThemes.length * THEME_BTN_W +
+      (this.availableThemes.length - 1) * THEME_BTN_GAP;
+    let x = (CANVAS_WIDTH - totalWidth) / 2;
+    return this.availableThemes.map(() => {
+      const bounds = { x, y: THEME_Y, w: THEME_BTN_W, h: THEME_BTN_H };
+      x += THEME_BTN_W + THEME_BTN_GAP;
+      return bounds;
+    });
+  }
+
   render(renderer: Renderer): void {
-    renderer.drawRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT, BG_COLOR);
+    const t = this.resolveTitleTheme();
+    const mapOpts = this.getEffectiveMapOptions();
+
+    renderer.drawRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT, t.bgColor);
 
     renderer.drawText(
-      "Don't Let the Demons Into Heaven",
+      t.title,
       CANVAS_WIDTH / 2,
       40,
-      { color: TITLE_COLOR, font: 'bold 22px sans-serif', align: 'center' },
+      { color: t.titleColor, font: 'bold 22px sans-serif', align: 'center' },
     );
     renderer.drawText(
-      'A Tower Defense Game',
+      t.subtitle,
       CANVAS_WIDTH / 2,
       65,
       { color: SUBTITLE_COLOR, font: '14px sans-serif', align: 'center' },
     );
+
+    // Theme selector row
+    if (this.availableThemes.length > 0) {
+      const themeBounds = this.getThemeButtonBounds();
+      for (let i = 0; i < this.availableThemes.length; i++) {
+        const opt = this.availableThemes[i]!;
+        const bounds = themeBounds[i]!;
+        const selected = this.selectedTheme === opt.id;
+        const bg = selected ? t.buttonBgSelected : t.buttonBg;
+        const border = selected ? t.buttonBorderSelected : t.buttonBorder;
+        renderer.drawRect(bounds.x, bounds.y, bounds.w, bounds.h, bg);
+        this.drawBorder(renderer, bounds, border);
+        renderer.drawText(opt.name, bounds.x + bounds.w / 2, bounds.y + 14, {
+          color: BUTTON_TEXT,
+          font: 'bold 11px sans-serif',
+          align: 'center',
+        });
+      }
+    }
 
     renderer.drawText('Select Difficulty', DIFF_X, 100, {
       color: HEADER_COLOR,
@@ -158,19 +250,19 @@ export class TitleScreen {
       const opt = DIFFICULTY_OPTIONS[i]!;
       const y = START_Y + i * (BTN_H + BTN_GAP);
       const selected = this.selectedDifficulty === opt.key;
-      this.drawSelectButton(renderer, DIFF_X, y, BTN_W, BTN_H, opt.name, opt.description, selected);
+      this.drawSelectButton(renderer, DIFF_X, y, BTN_W, BTN_H, opt.name, opt.description, selected, t);
     }
 
-    for (let i = 0; i < MAP_OPTIONS.length; i++) {
-      const opt = MAP_OPTIONS[i]!;
+    for (let i = 0; i < mapOpts.length; i++) {
+      const opt = mapOpts[i]!;
       const y = START_Y + i * (BTN_H + BTN_GAP);
       const selected = this.selectedMapId === opt.id;
-      this.drawSelectButton(renderer, MAP_X, y, BTN_W, BTN_H, opt.name, opt.description, selected);
+      this.drawSelectButton(renderer, MAP_X, y, BTN_W, BTN_H, opt.name, opt.description, selected, t);
     }
 
     const canStart = this.canStart();
-    const bg = canStart ? BUTTON_BG_SELECTED : BUTTON_BG_DISABLED;
-    const border = canStart ? BUTTON_BORDER_SELECTED : '#333';
+    const bg = canStart ? t.buttonBgSelected : BUTTON_BG_DISABLED;
+    const border = canStart ? t.buttonBorderSelected : '#333';
     const text = canStart ? BUTTON_TEXT : BUTTON_TEXT_DIM;
 
     renderer.drawRect(START_BOUNDS.x, START_BOUNDS.y, START_BOUNDS.w, START_BOUNDS.h, bg);
@@ -191,9 +283,10 @@ export class TitleScreen {
     name: string,
     description: string,
     selected: boolean,
+    t: Pick<TitleTheme, 'buttonBg' | 'buttonBgSelected' | 'buttonBorder' | 'buttonBorderSelected'>,
   ): void {
-    const bg = selected ? BUTTON_BG_SELECTED : BUTTON_BG;
-    const border = selected ? BUTTON_BORDER_SELECTED : BUTTON_BORDER;
+    const bg = selected ? t.buttonBgSelected : t.buttonBg;
+    const border = selected ? t.buttonBorderSelected : t.buttonBorder;
 
     renderer.drawRect(x, y, w, h, bg);
     this.drawBorder(renderer, { x, y, w, h }, border);
@@ -217,6 +310,19 @@ export class TitleScreen {
 
   private buildButtons(): void {
     this.buttons = [];
+
+    // Theme selector buttons
+    const themeBounds = this.getThemeButtonBounds();
+    for (let i = 0; i < this.availableThemes.length; i++) {
+      const opt = this.availableThemes[i]!;
+      const bounds = themeBounds[i]!;
+      this.buttons.push({
+        bounds,
+        type: 'theme',
+        key: opt.id,
+      });
+    }
+
     for (let i = 0; i < DIFFICULTY_OPTIONS.length; i++) {
       const opt = DIFFICULTY_OPTIONS[i]!;
       const y = START_Y + i * (BTN_H + BTN_GAP);
@@ -226,8 +332,10 @@ export class TitleScreen {
         key: opt.key,
       });
     }
-    for (let i = 0; i < MAP_OPTIONS.length; i++) {
-      const opt = MAP_OPTIONS[i]!;
+
+    const mapOpts = this.getEffectiveMapOptions();
+    for (let i = 0; i < mapOpts.length; i++) {
+      const opt = mapOpts[i]!;
       const y = START_Y + i * (BTN_H + BTN_GAP);
       this.buttons.push({
         bounds: { x: MAP_X, y, w: BTN_W, h: BTN_H },
@@ -235,6 +343,7 @@ export class TitleScreen {
         key: opt.id,
       });
     }
+
     this.buttons.push({
       bounds: START_BOUNDS,
       type: 'start',

@@ -2,7 +2,7 @@ import type { Renderer } from '../renderer/renderer';
 import type { SpriteCache } from '../renderer/sprite-loader';
 import type { TowerManager } from './tower-manager';
 import type { EconomyManager } from '../economy/economy-manager';
-import type { TowerData } from '../logic/types';
+import type { TowerData, TowerUITheme } from '../logic/types';
 import type { Tower } from './tower';
 import type { TilePoint } from '../input/coordinates';
 import { calculateDPS, calculateCostPerDPS } from '../logic/damage';
@@ -78,6 +78,7 @@ export class TowerUI {
   private tileSize: number;
   private mapWidthPx: number;
   private spriteCache: SpriteCache | null;
+  private towerUITheme: TowerUITheme | null = null;
 
   panelMode: PanelMode = 'none';
   selectedTile: TilePoint | null = null;
@@ -111,6 +112,11 @@ export class TowerUI {
     this.tileSize = tileSize;
     this.mapWidthPx = mapWidthTiles * tileSize;
     this.spriteCache = spriteCache ?? null;
+  }
+
+  /** Set theme overrides for panel colors and tower colors. */
+  setTheme(theme: TowerUITheme | null): void {
+    this.towerUITheme = theme;
   }
 
   getState(): TowerUIState {
@@ -369,7 +375,7 @@ export class TowerUI {
     if (sprite) {
       this.renderer.drawSprite(sprite, x, y, this.tileSize, this.tileSize);
     } else {
-      const color = TOWER_COLORS[archetype.archetype] ?? '#888';
+      const color = this.getTowerColor(archetype.archetype);
       const inset = 4;
       this.renderer.drawRect(
         x + inset,
@@ -452,22 +458,28 @@ export class TowerUI {
     return null;
   }
 
+  /** Resolve tower color from theme or default. */
+  private getTowerColor(archetype: string): string {
+    return this.towerUITheme?.towerColors[archetype] ?? TOWER_COLORS[archetype] ?? '#888';
+  }
+
   private drawPanelBorder(): void {
-    this.renderer.drawRect(this.panelX, this.panelY, this.panelWidth, 2, PANEL_BORDER);
+    const border = this.towerUITheme?.panelBorder ?? PANEL_BORDER;
+    this.renderer.drawRect(this.panelX, this.panelY, this.panelWidth, 2, border);
     this.renderer.drawRect(
       this.panelX,
       this.panelY + this.panelHeight - 2,
       this.panelWidth,
       2,
-      PANEL_BORDER,
+      border,
     );
-    this.renderer.drawRect(this.panelX, this.panelY, 2, this.panelHeight, PANEL_BORDER);
+    this.renderer.drawRect(this.panelX, this.panelY, 2, this.panelHeight, border);
     this.renderer.drawRect(
       this.panelX + this.panelWidth - 2,
       this.panelY,
       2,
       this.panelHeight,
-      PANEL_BORDER,
+      border,
     );
   }
 
@@ -477,7 +489,7 @@ export class TowerUI {
       this.panelY,
       this.panelWidth,
       this.panelHeight,
-      PANEL_BG,
+      this.towerUITheme?.panelBg ?? PANEL_BG,
     );
     this.drawPanelBorder();
 
@@ -516,7 +528,7 @@ export class TowerUI {
       if (sprite) {
         this.renderer.drawSprite(sprite, iconX, iconY, iconSize, iconSize);
       } else {
-        const color = TOWER_COLORS[archetype.archetype] ?? '#888';
+        const color = this.getTowerColor(archetype.archetype);
         this.renderer.drawRect(iconX, iconY, iconSize, iconSize, color);
       }
       this.renderer.restore();
@@ -561,7 +573,7 @@ export class TowerUI {
       this.panelY,
       this.panelWidth,
       this.panelHeight,
-      PANEL_BG,
+      this.towerUITheme?.panelBg ?? PANEL_BG,
     );
     this.drawPanelBorder();
 
