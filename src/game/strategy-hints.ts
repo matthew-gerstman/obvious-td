@@ -178,11 +178,13 @@ export function analyzeWave(
 
 // ── Rendering ────────────────────────────────────────────────────
 
-// Panel layout constants — positioned below the wave preview text (y=48)
-// and auto-start countdown (y=66-76) in the HUD.
-const PANEL_X = 8;
-const PANEL_Y = 82;
+// Panel layout constants — positioned on the right side of the canvas
+// to avoid overlapping tower UI build/info panels that appear at the
+// tapped tile position on the left side.
+const CANVAS_WIDTH = 640;
 const PANEL_WIDTH = 300;
+const PANEL_X = CANVAS_WIDTH - PANEL_WIDTH - 8; // 332 — right-aligned with 8px margin
+const PANEL_Y = 82;
 const PANEL_PADDING = 6;
 const TITLE_HEIGHT = 20;
 const ROW_GAP = 4;

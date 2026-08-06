@@ -114,11 +114,11 @@ async function completeWaves(page: Page, count: number): Promise<void> {
   }, count);
 }
 
-// Strategy hint panel area — x=8-308, y=82-280
+// Strategy hint panel area — right side of canvas: x=332-632, y=82-280
 // Border color: #4a90d9 = RGB(74, 144, 217)
 // Critical warning text: #ff4444 = RGB(255, 68, 68)
-const PANEL_X0 = 8;
-const PANEL_X1 = 308;
+const PANEL_X0 = 332;
+const PANEL_X1 = 632;
 const PANEL_BORDER_Y0 = 82;
 const PANEL_BORDER_Y1 = 85;
 
