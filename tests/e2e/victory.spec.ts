@@ -94,7 +94,13 @@ test('headless victory on Easy with automated tower placement', async ({ page })
 
   // Play through 30 waves
   for (let wave = 1; wave <= 30; wave++) {
-    // Place towers during WAVE_PREP (no stepping needed)
+    // Place towers during WAVE_PREP using a mixed strategy:
+    //   1. Economy towers on non-adjacent tiles for passive income
+    //   2. Frost towers on adjacent tiles for slow (keeps enemies in range)
+    //   3. Cannon on adjacent tiles for splash damage against groups
+    //   4. Sniper on adjacent tiles for armor-piercing damage
+    //   5. Gatling to fill remaining adjacent tiles (best DPS/cost)
+    //   6. Upgrade all towers, prioritizing damage towers over utility
     await page.evaluate((tiles) => {
       const tm = (window as unknown as {
         __towerManager: {
@@ -104,6 +110,7 @@ test('headless victory on Easy with automated tower placement', async ({ page })
           isBuildable: (x: number, y: number) => boolean;
           getAllTowers: () => Array<{
             id: string;
+            archetype: { id: string };
             canUpgrade: () => boolean;
             getUpgradeCost: () => number;
           }>;
@@ -122,56 +129,85 @@ test('headless victory on Easy with automated tower placement', async ({ page })
       const gatling = archetypes.find((t) => t.id === 'tower_gatling');
       const cannon = archetypes.find((t) => t.id === 'tower_cannon');
       const sniper = archetypes.find((t) => t.id === 'tower_sniper');
+      const frost = archetypes.find((t) => t.id === 'tower_frost');
+      const economy = archetypes.find((t) => t.id === 'tower_economy');
 
-      if (!gatling || !cannon || !sniper) return;
+      if (!gatling || !cannon || !sniper || !frost || !economy) return;
 
-      // Phase 1: Place new towers on empty buildable tiles
-      // Prioritize Gatling (cheapest, best DPS/cost), then Cannon, then Sniper
-      for (const tile of tiles) {
-        if (tm.getTowerAt(tile.x, tile.y)) continue;
-        if (!tm.isBuildable(tile.x, tile.y)) continue;
+      const adjacentTiles = tiles.filter((t) => t.adjacent);
+      const nonAdjacentTiles = tiles.filter((t) => !t.adjacent);
 
-        const gatlingTier1 = gatling.logic.tiers[0];
-        if (gatlingTier1 && eco.getGold() >= gatlingTier1.cost) {
-          const result = tm.placeTower(gatling, tile.x, tile.y, eco.getGold());
+      const countByType = (archId: string) =>
+        tm.getAllTowers().filter((t) => t.archetype.id === archId).length;
+
+      // Try to place one tower of the given archetype on the first available tile
+      const tryPlace = (
+        archetype: { logic: { tiers: Array<{ cost: number; tier: number }> } },
+        tileList: Array<{ x: number; y: number }>,
+      ): boolean => {
+        const cost = archetype.logic.tiers[0].cost;
+        if (eco.getGold() < cost) return false;
+        for (const tile of tileList) {
+          if (tm.getTowerAt(tile.x, tile.y)) continue;
+          if (!tm.isBuildable(tile.x, tile.y)) continue;
+          const result = tm.placeTower(archetype, tile.x, tile.y, eco.getGold());
           if (result.success) {
-            eco.spendGold(gatlingTier1.cost);
-            continue;
+            eco.spendGold(cost);
+            return true;
           }
         }
+        return false;
+      };
 
-        const cannonTier1 = cannon.logic.tiers[0];
-        if (cannonTier1 && eco.getGold() >= cannonTier1.cost) {
-          const result = tm.placeTower(cannon, tile.x, tile.y, eco.getGold());
-          if (result.success) {
-            eco.spendGold(cannonTier1.cost);
-            continue;
-          }
-        }
-
-        const sniperTier1 = sniper.logic.tiers[0];
-        if (sniperTier1 && eco.getGold() >= sniperTier1.cost) {
-          const result = tm.placeTower(sniper, tile.x, tile.y, eco.getGold());
-          if (result.success) {
-            eco.spendGold(sniperTier1.cost);
-            continue;
-          }
-        }
+      // Phase 1: Economy tower on non-adjacent tile (up to 2 total)
+      if (countByType('tower_economy') < 2) {
+        const tileList = nonAdjacentTiles.length > 0 ? nonAdjacentTiles : adjacentTiles;
+        tryPlace(economy, tileList);
       }
 
-      // Phase 2: Upgrade existing towers (after placing new ones)
-      for (const tower of tm.getAllTowers()) {
-        while (tower.canUpgrade()) {
-          const cost = tower.getUpgradeCost();
-          if (eco.getGold() >= cost) {
-            const result = tm.upgradeTower(tower.id, eco.getGold());
-            if (result.success) {
-              eco.spendGold(cost);
+      // Phase 2: Frost tower on adjacent tile (up to 2 total)
+      if (countByType('tower_frost') < 2) {
+        tryPlace(frost, adjacentTiles);
+      }
+
+      // Phase 3: Cannon on adjacent tile (up to 2 total)
+      if (countByType('tower_cannon') < 2) {
+        tryPlace(cannon, adjacentTiles);
+      }
+
+      // Phase 4: Sniper on adjacent tile (up to 2 total)
+      if (countByType('tower_sniper') < 2) {
+        tryPlace(sniper, adjacentTiles);
+      }
+
+      // Phase 5: Fill remaining adjacent tiles with Gatling T1
+      while (tryPlace(gatling, adjacentTiles)) {
+        // keep placing until gold runs out or tiles are full
+      }
+
+      // Phase 6: Upgrade all towers — prioritize damage, then utility, then economy
+      const upgradeOrder = [
+        'tower_gatling',
+        'tower_cannon',
+        'tower_sniper',
+        'tower_frost',
+        'tower_economy',
+      ];
+      for (const archId of upgradeOrder) {
+        for (const tower of tm.getAllTowers()) {
+          if (tower.archetype.id !== archId) continue;
+          while (tower.canUpgrade()) {
+            const cost = tower.getUpgradeCost();
+            if (eco.getGold() >= cost) {
+              const result = tm.upgradeTower(tower.id, eco.getGold());
+              if (result.success) {
+                eco.spendGold(cost);
+              } else {
+                break;
+              }
             } else {
               break;
             }
-          } else {
-            break;
           }
         }
       }
