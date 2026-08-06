@@ -18,6 +18,12 @@ import { GameStateMachine, type GameState, type DifficultyKey } from './game-sta
 import { TitleScreen } from './screens/title-screen';
 import { ResultScreen, type ResultStats } from './screens/result-screen';
 import { HUD, type HUDContext } from './hud';
+import {
+  analyzeWave,
+  renderStrategyHints,
+  type StrategyHintResult,
+  type PlacedTowerInfo,
+} from './strategy-hints';
 import { DamageNumberManager } from './damage-numbers';
 import { drawHealthBar, drawStatusTint } from './enemy-visuals';
 
@@ -78,6 +84,7 @@ export class Game {
   private totalEnemiesKilled = 0;
   private paused = false;
   private autoStartEnabled = true;
+  private currentStrategyHints: StrategyHintResult | null = null;
 
   // Input state for E2E test hooks
   private inputState = {
@@ -201,6 +208,7 @@ export class Game {
     this.totalEnemiesKilled = 0;
     this.paused = false;
     this.autoStartEnabled = true;
+    this.currentStrategyHints = null;
     this.damageNumberManager.clear();
     this.gameLoop.setSpeed(1);
 
@@ -223,6 +231,7 @@ export class Game {
     if (!this.waveRunner || !this.economyManager) return;
 
     this.currentWave++;
+    this.currentStrategyHints = null;
     this.economyManager.setWaveNumber(this.currentWave);
 
     this.waveRunner.startWave(
@@ -251,6 +260,7 @@ export class Game {
     this.speedMultiplier = 1;
     this.paused = false;
     this.autoStartEnabled = true;
+    this.currentStrategyHints = null;
     this.gameLoop.setSpeed(1);
   }
 
@@ -288,6 +298,12 @@ export class Game {
   /** Returns the current prep timer value (seconds elapsed in WAVE_PREP). */
   getPrepTimer(): number {
     return this.prepTimer;
+  }
+
+  /** Returns strategy hints for the upcoming wave, or null outside WAVE_PREP. */
+  getStrategyHints(): StrategyHintResult | null {
+    if (this.stateMachine.getState() !== 'WAVE_PREP') return null;
+    return this.computeStrategyHints();
   }
 
   /** Clean up event listeners. */
@@ -559,6 +575,14 @@ export class Game {
       this.muzzleFlashManager.render(this.renderer, TILE_SIZE);
     }
 
+    // Strategy hints (WAVE_PREP only) — before tower UI so panels stay on top
+    if (this.stateMachine.getState() === 'WAVE_PREP') {
+      this.currentStrategyHints = this.computeStrategyHints();
+      if (this.currentStrategyHints) {
+        renderStrategyHints(this.renderer, this.currentStrategyHints);
+      }
+    }
+
     // Tower UI panels
     if (this.towerUI) {
       this.towerUI.render();
@@ -670,6 +694,33 @@ export class Game {
       return this.bossTelegraph.getTelegraphMessage(nextWave);
     }
     return null;
+  }
+
+  /**
+   * Computes strategy hints for the upcoming wave based on the player's
+   * currently placed towers. Returns null if data isn't loaded yet.
+   */
+  private computeStrategyHints(): StrategyHintResult | null {
+    if (!this.waveTable || Object.keys(this.enemyArchetypes).length === 0) return null;
+    if (this.towerArchetypes.length === 0) return null;
+
+    const nextWave = this.currentWave + 1;
+    return analyzeWave(
+      nextWave,
+      this.waveTable,
+      this.enemyArchetypes,
+      this.towerArchetypes,
+      this.getPlacedTowerInfo(),
+    );
+  }
+
+  /** Extracts capability info from all placed towers for hint analysis. */
+  private getPlacedTowerInfo(): PlacedTowerInfo[] {
+    if (!this.towerManager) return [];
+    return this.towerManager.getAllTowers().map((t) => ({
+      hitsAir: t.getStats().hitsAir,
+      armorPiercing: t.getStats().armorPiercing,
+    }));
   }
 
   private getResultStats(): ResultStats {
