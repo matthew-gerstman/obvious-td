@@ -304,8 +304,8 @@ function genPathTile(file: string, type: 'h' | 'v' | 'corner_ne' | 'corner_nw' |
       p.px(x, y, c[0] * edge, c[1] * edge, c[2] * edge);
     }
   } else {
-    // Corner: arc centered on the tile corner opposite the open sides
-    const cx = type === 'corner_ne' || type === 'corner_se' ? 0 : 32;
+    // Corner: arc centered on the tile corner shared by the two open sides
+    const cx = type === 'corner_ne' || type === 'corner_se' ? 32 : 0;
     const cy = type === 'corner_ne' || type === 'corner_nw' ? 0 : 32;
     const rad = 20;
     for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
